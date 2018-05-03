@@ -13,6 +13,7 @@ Projet informatique sur des techniques de compression d'image.
 
 2. Transformée DCT blocs 8*8 des erreurs de prédiction.
 Quantification coef. DCT:
+
 ![img] (http://latex.codecogs.com/svg.latex?%5Cwidehat%7Bf%7D_q%28u%2Cv%29%3D%5Cfrac%7B%5Cfrac%7B%5Cwidehat%7Bf%7D%28u%2Cv%29%5Ccdot+16%7D%7Bw%5Bu%5D%5Bv%5D%7D-k%5Ccdot+Q_s%7D%7B2Q_s%7D)
 
 avec
