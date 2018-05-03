@@ -1,20 +1,21 @@
 # HTI projet
 
-Pour la compensation de mouvement, on utilisera une méthode de block matching :  
-Pour chq bloc dans la trame t, on détermine un unique vecteur de déplacement (u, v) tel que :  
-![img] (http://latex.codecogs.com/svg.latex?(u,v)=\underset{(i,j)}{argmin}\left\{\sum_{k=i_0}^{i_0+7}\sum_{l=j_0}^{j_0+7}\left%20|%20x^t(k,l)-x^{t-1}(k-i,l-j)%20\right%20|\right\},\qquad%20i,j=-16,...,16)
+> Pour la compensation de mouvement, on utilisera une méthode de block matching :  
+> Pour chq bloc dans la trame t, on détermine un unique vecteur de déplacement (u, v) tel que :  
+> ![img](http://latex.codecogs.com/svg.latex?%28u%2Cv%29%3D%5Cunderset%7B%28i%2Cj%29%7D%7Bargmin%7D%5Cleft%5C%7B%5Csum_%7Bk%3Di_0%7D%5E%7Bi_0%2B7%7D%5Csum_%7Bl%3Dj_0%7D%5E%7Bj_0%2B7%7D%5Cleft%20%7C%20x%5Et%28k%2Cl%29-x%5E%7Bt-1%7D%28k-i%2Cl-j%29%20%5Cright%20%7C%5Cright%5C%7D%2C%5Cqquad%20i%2Cj%3D-16%2C...%2C16)
 
-avec ![img](http://latex.codecogs.com/svg.latex?%28i_0%2Cj_0%29) les coordonnées du coin supérieur gauche du bloc considéré, et ![img] (http://latex.codecogs.com/svg.latex?x%5Et) la trame t.
+> avec ![img](http://latex.codecogs.com/svg.latex?%28i_0%2Cj_0%29) les coordonnées du coin supérieur gauche du bloc considéré, et ![img](http://latex.codecogs.com/svg.latex?x%5Et) la trame t.
 
-La prédiction d'un pixel (i,j) de la trame t appartenant à un bloc de vecteur de déplacement (u,v) est donnée par la relation suivante :  
-![img](http://latex.codecogs.com/svg.latex?%5Cwidehat%7Bx%7D%5Et%28i%2Cj%29%3Dx%5E%7Bt-1%7D%28i-u%2Cj-v%29)
+> La prédiction d'un pixel (i,j) de la trame t appartenant à un bloc de vecteur de déplacement (u,v) est donnée par la relation suivante :  
+> ![img](http://latex.codecogs.com/svg.latex?%5Cwidehat%7Bx%7D%5Et%28i%2Cj%29%3Dx%5E%7Bt-1%7D%28i-u%2Cj-v%29)
 
 1. Prédiction temporelle avec et sans estimation/compensation de mouvement.
 - Première trame = Intra : pas de prédiction temporelle
 - Trames suivantes = Prédictif : trame (t) prédite à partir de trame (t-1)
 
 2. Transformée DCT blocs 8*8 des erreurs de prédiction.  
-Quantification coef. DCT:  
+Quantification coef. DCT:
+
 ![img](http://latex.codecogs.com/svg.latex?%5Cwidehat%7Bf%7D_q%28u%2Cv%29%3D%5Cfrac%7B%5Cfrac%7B%5Cwidehat%7Bf%7D%28u%2Cv%29%5Ccdot+16%7D%7Bw%5Bu%5D%5Bv%5D%7D-k%5Ccdot+Q_s%7D%7B2Q_s%7D)
 
 avec
@@ -25,11 +26,11 @@ avec
 
 ![img](http://latex.codecogs.com/svg.latex?Q_s%5Cin%5C%7B1%2C...%2C31%5C%7D) : la taille/échelle du quantificateur.
 
-Pour 3. et 4., on utilise les coefficients de prédiction suivants :
+> Pour 3. et 4., on utilise les coefficients de prédiction suivants :
 
-| 0   | 0.5 
-------|-----
-| 0.5 |  x  
+> | 0   | 0.5 
+> ------|-----
+> | 0.5 |  x  
 
 3. Prédiction DPCM ligne par ligne des coefficients DC de chaque DCT.
 4. Codage prédictif (DPCM) des vecteurs de mouvement.
