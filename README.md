@@ -1,5 +1,6 @@
 # HTI projet
 
+## Sujet :
 > Pour la compensation de mouvement, on utilisera une méthode de block matching :  
 > Pour chq bloc dans la trame t, on détermine un unique vecteur de déplacement (u, v) tel que :  
 > ![img](http://latex.codecogs.com/svg.latex?%28u%2Cv%29%3D%5Cunderset%7B%28i%2Cj%29%7D%7Bargmin%7D%5Cleft%5C%7B%5Csum_%7Bk%3Di_0%7D%5E%7Bi_0%2B7%7D%5Csum_%7Bl%3Dj_0%7D%5E%7Bj_0%2B7%7D%5Cleft%20%7C%20x%5Et%28k%2Cl%29-x%5E%7Bt-1%7D%28k-i%2Cl-j%29%20%5Cright%20%7C%5Cright%5C%7D%2C%5Cqquad%20i%2Cj%3D-16%2C...%2C16)
