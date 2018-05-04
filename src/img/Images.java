@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import javax.imageio.ImageIO;
 
 /**
- * Classe utilitaire de chargement et écriture d'images.
+ * Classe utilitaire de lecture et écriture d'images.
  */
 public class Images
 {

@@ -20,6 +20,18 @@ public class VideoEncoder
 	}
 	
 	/**
+	 * Decoder un flux de trame.
+	 * 
+	 * @param frameIt
+	 *            flux de trame à décoder.
+	 * @return flux de trames décodées.
+	 */
+	public static Iterator<int[][]> decode(final Iterator<int[][]> frameIt)
+	{
+		return new DecoderIterator(frameIt);
+	}
+	
+	/**
 	 * Prédire une trame à partir de la précédente.
 	 * 
 	 * @param prevFrameRec
@@ -118,4 +130,38 @@ public class VideoEncoder
 			return frameIt.hasNext();
 		}
 	}
+	
+	/**
+	 * Iterateur de trames decodées.
+	 */
+	private static class DecoderIterator implements Iterator<int[][]>
+	{
+		/**
+		 * Iterateur des trames à décoder.
+		 */
+		private final Iterator<int[][]> frameIt;
+		/**
+		 * Trame précédente reconstruite.
+		 */
+		private int[][] prevFrameRec;
+		
+		public DecoderIterator(final Iterator<int[][]> frameIt)
+		{
+			this.frameIt = frameIt;
+		}
+		
+		@Override
+		public int[][] next()
+		{
+			//TODO
+			return null;
+		}
+		
+		@Override
+		public boolean hasNext()
+		{
+			return frameIt.hasNext();
+		}
+	}
+	
 }
