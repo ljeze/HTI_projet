@@ -1,6 +1,7 @@
 package img;
 
-import java.util.Iterator;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Encodeur / decodeur d'une séquence d'images.
@@ -10,25 +11,25 @@ public class VideoEncoder
 	/**
 	 * Encoder un flux de trame.
 	 * 
-	 * @param frameIt
+	 * @param frameStream
 	 *            flux de trame à encoder.
 	 * @return flux de trames encodées.
 	 */
-	public static Iterator<int[][]> encode(final Iterator<int[][]> frameIt)
+	public static Stream<int[][]> encode(final Stream<int[][]> frameStream)
 	{
-		return new EncoderIterator(frameIt);
+		return frameStream.map(new Encoder());
 	}
 	
 	/**
 	 * Decoder un flux de trame.
 	 * 
-	 * @param frameIt
+	 * @param frameStream
 	 *            flux de trame à décoder.
 	 * @return flux de trames décodées.
 	 */
-	public static Iterator<int[][]> decode(final Iterator<int[][]> frameIt)
+	public static Stream<int[][]> decode(final Stream<int[][]> frameStream)
 	{
-		return new DecoderIterator(frameIt);
+		return frameStream.map(new Decoder());
 	}
 	
 	/**
@@ -83,30 +84,19 @@ public class VideoEncoder
 	}
 	
 	/**
-	 * Itérateur de trame encodées.
+	 * Encodeur de trame.
 	 */
-	private static class EncoderIterator implements Iterator<int[][]>
+	private static class Encoder implements Function<int[][], int[][]>
 	{
-		/**
-		 * Iterateur des trames à encoder.
-		 */
-		private final Iterator<int[][]> frameIt;
 		/**
 		 * Trame précédente reconstruite.
 		 */
 		private int[][] prevFrameRec;
 		
-		public EncoderIterator(final Iterator<int[][]> frameIt)
-		{
-			this.frameIt = frameIt;
-		}
-		
+		// Trame actuelle initiale (non reconstruite).
 		@Override
-		public int[][] next()
+		public int[][] apply(final int[][] frame)
 		{
-			// Trame actuelle initiale (non reconstruite).
-			int[][] frame = frameIt.next();
-			
 			// Si l'on est sur la première trame.
 			if (prevFrameRec == null)
 			{
@@ -123,44 +113,36 @@ public class VideoEncoder
 			prevFrameRec = frameRec;
 			return predError;
 		}
-		
-		@Override
-		public boolean hasNext()
-		{
-			return frameIt.hasNext();
-		}
 	}
 	
 	/**
-	 * Iterateur de trames decodées.
+	 * Decodeur de trames.
 	 */
-	private static class DecoderIterator implements Iterator<int[][]>
+	private static class Decoder implements Function<int[][], int[][]>
 	{
-		/**
-		 * Iterateur des trames à décoder.
-		 */
-		private final Iterator<int[][]> frameIt;
 		/**
 		 * Trame précédente reconstruite.
 		 */
 		private int[][] prevFrameRec;
 		
-		public DecoderIterator(final Iterator<int[][]> frameIt)
-		{
-			this.frameIt = frameIt;
-		}
-		
+		// Trame actuelle initiale (non reconstruite).
 		@Override
-		public int[][] next()
+		public int[][] apply(final int[][] frame)
 		{
-			//TODO
-			return null;
-		}
-		
-		@Override
-		public boolean hasNext()
-		{
-			return frameIt.hasNext();
+			// Première trame.
+			if (prevFrameRec == null)
+			{
+				prevFrameRec = frame;
+				return frame;
+			}
+			
+			// La trame est une matrice d'erreurs de prédiction.
+			int[][] predError = frame;
+			// On calcul la trame actuelle reconstruite.
+			int[][] frameRec = reconstruct(prevFrameRec, predError);
+			
+			prevFrameRec = frameRec;
+			return frameRec;
 		}
 	}
 	

@@ -6,8 +6,8 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
-import java.util.Iterator;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Classe utilitaire de lecture et d'écriture de séquence d'images.
@@ -26,16 +26,15 @@ public class Videos
 	 * @return Flux de trames de la séquence.
 	 * @throws FileNotFoundException
 	 */
-	public static Iterator<int[][]> readGray(final Path sequencePath) throws FileNotFoundException
+	public static Stream<int[][]> readGray(final Path sequencePath) throws FileNotFoundException
 	{
-		final PathMatcher frameMatcher = FileSystems.getDefault().getPathMatcher("glob:" + sequencePath.getFileName() + "*.{jpg,jpeg,png,bmp}");
+		final PathMatcher frameMatcher = sequencePath.getFileSystem().getPathMatcher("glob:**/" + sequencePath.getFileName() + "*.{jpg,jpeg,png,bmp}");
 		
 		try
 		{
 			return Files.list(sequencePath.getParent())
 					 	.filter(frameMatcher::matches)
-					 	.map(asUncheckedFunction(Images::readGray))
-					 	.iterator();
+					 	.map(asUncheckedFunction(Images::readGray));
 		} catch (IOException e)
 		{
 			throw new FileNotFoundException("La séquence est inexistante.");
