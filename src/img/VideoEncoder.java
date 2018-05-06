@@ -15,7 +15,7 @@ public class VideoEncoder
 	 *            flux de trame à encoder.
 	 * @return flux de trames encodées.
 	 */
-	public static Stream<int[][]> encode(final Stream<int[][]> frameStream)
+	public static Stream<EncodedFrame> encode(final Stream<int[][]> frameStream)
 	{
 		return frameStream.map(new Encoder());
 	}
@@ -27,7 +27,7 @@ public class VideoEncoder
 	 *            flux de trame à décoder.
 	 * @return flux de trames décodées.
 	 */
-	public static Stream<int[][]> decode(final Stream<int[][]> frameStream)
+	public static Stream<int[][]> decode(final Stream<EncodedFrame> frameStream)
 	{
 		return frameStream.map(new Decoder());
 	}
@@ -86,23 +86,29 @@ public class VideoEncoder
 	/**
 	 * Encodeur de trame.
 	 */
-	private static class Encoder implements Function<int[][], int[][]>
+	private static class Encoder implements Function<int[][], EncodedFrame>
 	{
 		/**
 		 * Trame précédente reconstruite.
 		 */
 		private int[][] prevFrameRec;
 		
-		// Trame actuelle initiale (non reconstruite).
+		/**
+		 * Encode une trame.
+		 * 
+		 * @param frame
+		 *            trame actuelle initiale (non reconstruite).
+		 * @return trame encodée.
+		 */
 		@Override
-		public int[][] apply(final int[][] frame)
+		public EncodedFrame apply(final int[][] frame)
 		{
 			// Si l'on est sur la première trame.
 			if (prevFrameRec == null)
 			{
 				prevFrameRec = frame;
 				// L'envoyer sans prédiction.
-				return prevFrameRec;
+				return new EncodedFrame(prevFrameRec);
 			}
 			
 			// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
@@ -111,14 +117,14 @@ public class VideoEncoder
 			int[][] frameRec = reconstruct(prevFrameRec, predError);
 			
 			prevFrameRec = frameRec;
-			return predError;
+			return new EncodedFrame(predError);
 		}
 	}
 	
 	/**
 	 * Decodeur de trames.
 	 */
-	private static class Decoder implements Function<int[][], int[][]>
+	private static class Decoder implements Function<EncodedFrame, int[][]>
 	{
 		/**
 		 * Trame précédente reconstruite.
@@ -127,17 +133,17 @@ public class VideoEncoder
 		
 		// Trame actuelle initiale (non reconstruite).
 		@Override
-		public int[][] apply(final int[][] frame)
+		public int[][] apply(final EncodedFrame frame)
 		{
 			// Première trame.
 			if (prevFrameRec == null)
 			{
-				prevFrameRec = frame;
-				return frame;
+				prevFrameRec = frame.getPredictionErrors();
+				return prevFrameRec;
 			}
 			
 			// La trame est une matrice d'erreurs de prédiction.
-			int[][] predError = frame;
+			int[][] predError = frame.getPredictionErrors();
 			// On calcul la trame actuelle reconstruite.
 			int[][] frameRec = reconstruct(prevFrameRec, predError);
 			

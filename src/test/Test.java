@@ -1,15 +1,12 @@
 package test;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
-import javax.imageio.ImageIO;
-
+import img.EncodedFrame;
 import img.Images;
 import img.VideoEncoder;
 import img.Videos;
@@ -55,7 +52,7 @@ public class Test
 	public static void testVideoEncoding() throws FileNotFoundException
 	{
 		// Exemple : charger une séquence de 5 images nommées sequence1.jpg, sequence2.jpg, ..., sequence5.jpg .
-		Stream<int[][]> encodedSequence = VideoEncoder.encode(
+		Stream<EncodedFrame> encodedSequence = VideoEncoder.encode(
 			Videos.readGray(getTestFile("mas"))
 		);
 		
