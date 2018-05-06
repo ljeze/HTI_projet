@@ -36,4 +36,13 @@ public class EncodedFrame
 	{
 		return predictionErrors;
 	}
+	
+	/**
+	 * Obtenir la carte de compensation de mouvement des blocs.
+	 * @return carte de compensation de mouvement des blocs.
+	 */
+	public Vector2D[][] getBlockMovementMap()
+	{
+		return blockMovementMap;
+	}
 }
