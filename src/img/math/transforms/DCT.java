@@ -1,7 +1,5 @@
 package img.math.transforms;
 
-import java.util.Arrays;
-
 import img.math.Complex;
 import img.math.Matrices;
 
@@ -24,13 +22,11 @@ public class DCT
 		
 		final double[][] matrixDCT = new double[h][w];
 		
-		// Calculer la matrice rowDCT de la transformée sur les lignes.
-		final double[][] rowDCT = new double[h][];
-		
+		// Calculer la matrice matrixDCT de la transformée sur les lignes.
 		for (int y = 0; y < h; ++y)
 		{
 			// Calculer la DCT de la ligne.
-			rowDCT[y] = transform(matrix[y]);
+			matrixDCT[y] = transform(matrix[y]);
 		}
 		
 		// Calculer la matrice de la transformée sur les colonnes de la matrice
@@ -43,7 +39,7 @@ public class DCT
 		{
 			for (int y = 0; y < h; ++y)
 			{
-				column[y] = rowDCT[y][x];
+				column[y] = matrixDCT[y][x];
 			}
 			
 			// Calculer la DCT de la colonne de rowDCT.

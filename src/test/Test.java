@@ -77,10 +77,10 @@ public class Test
 	 */
 	public static void testDCT2D() throws FileNotFoundException, IllegalArgumentException
 	{
-		int[][] img = Images.readGray(getTestFile("letter_A.bmp"));
-		System.out.println(Arrays.deepToString(DCT.transform2D(Matrices.toDouble(img))));
+		int[][] img = Images.readGray(getTestFile("mas082.bmp"));
+		//System.out.println(Arrays.deepToString(DCT.transform2D(Matrices.toDouble(img))));
 		
-		/*int[][] tmp = new int[128][256];
+		int[][] tmp = new int[128][256];
 		
 		for (int i = 0; i < tmp.length; ++i)
 		for (int j = 0; j < tmp[0].length; ++j)
@@ -96,7 +96,7 @@ public class Test
 				img[y][x] = (int) Math.min(255, Math.max(0, imgRec[y][x]));
 			}
 		}
-		Plot.showImg(Images.toJavaImg(img));*/
+		Plot.showImg(Images.toJavaImg(img));
 	}
 	
 	/**
