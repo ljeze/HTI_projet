@@ -21,6 +21,30 @@ public class Complex
 	}
 	
 	/**
+	 * Obtenir une exponentielle complexe avec l'argument spécifié.
+	 * 
+	 * @param theta
+	 *            angle argument de l'exponentielle complexe.
+	 * @return exponentielle complexe avec l'argument spécifié.
+	 */
+	public static Complex exp(final double theta)
+	{
+		return new Complex(Math.sin(theta), Math.cos(theta));
+	}
+	
+	/**
+	 * Obtenir un réel sous forme complexe.
+	 * 
+	 * @param real
+	 *            réel.
+	 * @return réel sous forme complexe.
+	 */
+	public static Complex real(final double real)
+	{
+		return new Complex(0, real);
+	}
+	
+	/**
 	 * Obtenir la partie imaginaire de ce nombre complexe.
 	 * @return partie imaginaire.
 	 */

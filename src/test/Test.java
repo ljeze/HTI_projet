@@ -12,6 +12,7 @@ import img.EncodedFrame;
 import img.Images;
 import img.VideoEncoder;
 import img.Videos;
+import img.math.Complex;
 import img.math.transforms.DCT;
 import img.math.transforms.FFT;
 import test.plot.Plot;
@@ -44,8 +45,12 @@ public class Test
 	 */
 	public static void testFFT()
 	{
-		double[] sampleVector = IntStream.range(0, 32).mapToDouble(x->x==1?5:0).toArray();
-		System.out.println(Arrays.toString(FFT.transform(sampleVector)));
+		double[] sampleVector = IntStream.range(0, 32).mapToDouble(x->x).toArray();
+		Complex[] sampleVectorFFT = FFT.transform(sampleVector);
+		
+		System.out.println("X = " + Arrays.toString(sampleVector));
+		System.out.println("FFT(X) = " + Arrays.toString(sampleVectorFFT));
+		System.out.println("FFT-1(FFT(X)) = " + Arrays.toString(FFT.inverseTransform(sampleVectorFFT)));
 	}
 	
 	/**
@@ -54,7 +59,14 @@ public class Test
 	public static void testDCT()
 	{
 		double[] sampleVector = {1, 2, 3, 4};
-		System.out.println(Arrays.toString(DCT.transform(sampleVector)));
+		double[] sampleVectorDCT = DCT.transform(sampleVector);
+		/*
+		sampleVectorDCT[1] *= -1;
+		sampleVectorDCT[1] *= -1;
+		*/
+		System.out.println("X = " + Arrays.toString(sampleVector));
+		System.out.println("DCT(X) = " + Arrays.toString(sampleVectorDCT));
+		System.out.println("DCT-1(DCT(X)) = " + Arrays.toString(DCT.inverseTransform(sampleVectorDCT)));
 	}
 	
 	/**
@@ -85,8 +97,10 @@ public class Test
 	
 	public static void main(final String[] args)
 	{
-		testDCT();
+		// testFFT();
+		// testDCT();
 		// testImageRead();
+		
 		/*try
 		{
 			testVideoEncoding();

@@ -140,7 +140,7 @@ public class FFT
 			// Argument de l'exponentielle.
 			double expArg = -2*j* Math.PI/n;
 			// Facteur (omega_j * oddFFT[i]) avec omega_j = exp(-2*i*pi*j/n)) 
-			Complex omegaOdd = new Complex(Math.sin(expArg), Math.cos(expArg)).mult(oddFFT[j]);
+			Complex omegaOdd = Complex.exp(expArg).mult(oddFFT[j]);
 			
 			vectorFFT[j] = evenFFT[j].add(omegaOdd);
 			vectorFFT[j + n/2] = evenFFT[j].sub(omegaOdd);

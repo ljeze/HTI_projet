@@ -1,5 +1,7 @@
 package img.math.transforms;
 
+import java.util.Arrays;
+
 import img.math.Complex;
 import img.math.Matrices;
 
@@ -202,22 +204,26 @@ public class DCT
 	
 	/**
 	 * Faire une DCT d'un vecteur 1D.
-	 * 
+	 * Voir <a href="https://ieeexplore.ieee.org/document/1163351/">A fast cosine transform in one and two dimensions</a>
+	 * et <a href="http://fourier.eng.hmc.edu/e161/lectures/dct/node2.html">Fast DCT algorithm</a>
 	 * @param vector
 	 *            vecteur à transformer.
 	 * @return Transformée en cos discret du vecteur 1D.
 	 */
 	public static double[] transform(final double[] vector)
 	{
+		final int n = vector.length;
+		
 		final double[] symExt = symetricExtension(vector);
 		// Fft de l'extension symétrique.
 		final Complex[] symExtFFT = FFT.transform(symExt);
 		
-		// On prend un terme sur deux.
-		final double[] vectorDCT = new double[vector.length];
-		for (int i = 0; i < vectorDCT.length; ++i)
+		// On obtient alors [vectorDCT[0], vectorDCT[1], ..., vectorDCT[n-1], 0, vectorDCT[n-1]*, ..., vectorDCT[1]*].
+		// On prend la première moitiée translatée.
+		final double[] vectorDCT = new double[n];
+		for (int i = 0; i < n; ++i)
 		{
-			vectorDCT[i] = symExtFFT[i*2].realPart();
+			vectorDCT[i] = symExtFFT[i].mult(Complex.exp(-Math.PI*i/(2*n))).realPart();
 		}
 		
 		return vectorDCT;
@@ -232,7 +238,29 @@ public class DCT
 	 */
 	public static double[] inverseTransform(final double[] vectorDCT)
 	{
-		// TODO: Faire la transformée inverse DCT.
-		return vectorDCT;
+		final int n = vectorDCT.length;
+		
+		// On reconstitue le vecteur [vectorDCT[0], vectorDCT[1], ..., vectorDCT[n-1], 0, vectorDCT[n-1]*, ..., vectorDCT[1]*].
+		final Complex[] symExtFFT = new Complex[2*n];
+		
+		symExtFFT[0] = Complex.real(vectorDCT[0]);
+		symExtFFT[n] = Complex.real(0);
+		for (int i = 1; i < n; ++i)
+		{
+			symExtFFT[i] = Complex.real(vectorDCT[i]).mult(Complex.exp(Math.PI*i/(2*n)));
+			symExtFFT[2*n - i] = symExtFFT[i].conjugate();
+		}
+		
+		// On applique une FFT inverse.
+		final Complex[] symExtComplex = FFT.inverseTransform(symExtFFT);
+		final double[] vector = new double[n];
+		
+		// On ne récupère que les n derniers échantillons.
+		for (int i = 0; i < n; ++i)
+		{
+			vector[i] = symExtComplex[n + i].realPart();
+		}
+		
+		return vector;
 	}
 }
