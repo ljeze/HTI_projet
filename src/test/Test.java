@@ -4,12 +4,16 @@ import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import img.EncodedFrame;
 import img.Images;
 import img.VideoEncoder;
 import img.Videos;
+import img.math.transforms.DCT;
+import img.math.transforms.FFT;
 import test.plot.Plot;
 
 /**
@@ -33,6 +37,24 @@ public class Test
 		{
 			throw new IllegalArgumentException("Le fichier spécifié est inexistant : " + e.getMessage());
 		}
+	}
+	
+	/**
+	 * Tester la FFT.
+	 */
+	public static void testFFT()
+	{
+		double[] sampleVector = IntStream.range(0, 32).mapToDouble(x->x==1?5:0).toArray();
+		System.out.println(Arrays.toString(FFT.transform(sampleVector)));
+	}
+	
+	/**
+	 * Tester la DCT.
+	 */
+	public static void testDCT()
+	{
+		double[] sampleVector = {1, 2, 3, 4};
+		System.out.println(Arrays.toString(DCT.transform(sampleVector)));
 	}
 	
 	/**
@@ -63,15 +85,16 @@ public class Test
 	
 	public static void main(final String[] args)
 	{
+		testDCT();
 		// testImageRead();
-		try
+		/*try
 		{
 			testVideoEncoding();
 		} catch (FileNotFoundException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 }

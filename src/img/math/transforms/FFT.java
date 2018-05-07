@@ -1,4 +1,6 @@
-package img.math;
+package img.math.transforms;
+
+import img.math.Complex;
 
 /**
  * Classe utilitaire pour la tranformée de Fourier rapide (FFT).
@@ -21,7 +23,7 @@ public class FFT
 		
 		// On utilise la représentation binaire du nombre pour vérifier
 		// rapidement.
-		if ((vector.length & (vector.length - 1)) == 0)
+		if ((vector.length & (vector.length - 1)) != 0)
 		{
 			throw new IllegalArgumentException("La taille du vecteur (taille de " + vector.length + ") n'est pas une puissance de deux.");
 		}
@@ -48,27 +50,29 @@ public class FFT
 	 * @throws IllegalArgumentException
 	 *             si la taille du vecteur n'est pas une puissance de 2.
 	 */
-	public static double[] inverseTransform(final Complex[] vectorFFT) throws IllegalArgumentException
+	public static Complex[] inverseTransform(final Complex[] vectorFFT) throws IllegalArgumentException
 	{
 		// Vérifier si la taille du vecteur n'est pas une puissance de deux.
 		
 		// On utilise la représentation binaire du nombre pour vérifier
 		// rapidement.
-		if ((vectorFFT.length & (vectorFFT.length - 1)) == 0)
+		if ((vectorFFT.length & (vectorFFT.length - 1)) != 0)
 		{
 			throw new IllegalArgumentException("La taille du vecteur (taille de " + vectorFFT.length + ") n'est pas une puissance de deux.");
 		}
 		
-		final Complex[] vectorComplex = recursiveTransform(vectorFFT);
+		final Complex[] vectorComplex = recursiveInverseTransform(vectorFFT);
+		
 		// Transformer le vecteur de double en vecteur de nombres complexes.
-		final double[] vector = new double[vectorComplex.length];
+		/*final double[] vector = new double[vectorComplex.length];
 		
 		for (int i = 0; i < vector.length; ++i)
 		{
-			vector[i] = vectorComplex[i].realPart();
+			vector[i] = vectorComplex[i];
 		}
+		*/
 		
-		return vector;
+		return vectorComplex;
 	}
 	
 	

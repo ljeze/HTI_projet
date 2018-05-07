@@ -94,4 +94,10 @@ public class Complex
 	{
 		return new Complex(-img, real);
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "{" + real + " + " + img + " i}"; 
+	}
 }

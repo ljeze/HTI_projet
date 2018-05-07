@@ -3,18 +3,44 @@ package img;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import img.math.Matrices;
 import img.math.Vector2D;
+import img.math.transforms.DCT;
 
 /**
  * Encodeur / decodeur d'une séquence d'images.
  */
 public class VideoEncoder
 {
+	//==========================================================================
+	// Constantes.
+	//==========================================================================
 	/**
 	 * Taille des blocs utilisés pour la compensation de mouvement.
 	 */
-	private static final int BLOCK_SIZE = 8;
+	private static final int MOVEMENT_BLOCK_SIZE = 8;
+	/**
+	 * Taille des blocs utilisés pour la DCT en bloc.
+	 */
+	private static final int DCT_BLOCK_SIZE = 8;
+	/**
+	 * Matrice de poids pour la quantification.
+	 */
+	private static final int[][] QUANTIF_WEIGHTS = 
+	{
+		{ 8 , 17, 18, 19, 21, 23, 25, 27},
+		{ 17, 18, 19, 21, 23, 25, 27, 28},
+		{ 20, 21, 22, 23, 24, 26, 28, 30},
+		{ 21, 22, 23, 24, 26, 28, 30, 32},
+		{ 22, 23, 24, 26, 28, 30, 32, 35},
+		{ 23, 24, 26, 28, 30, 32, 35, 38},
+		{ 25, 26, 28, 30, 32, 35, 38, 41},
+		{ 27, 28, 30, 32, 35, 38, 41, 45},
+	};
 	
+	//==========================================================================
+	// Fonctions principales d'encodage / décodage.
+	//==========================================================================
 	/**
 	 * Encoder un flux de trame.
 	 * 
@@ -39,6 +65,9 @@ public class VideoEncoder
 		return frameStream.map(new Decoder());
 	}
 	
+	//==========================================================================
+	// Fonctions intermédiaires utiles pour l'encodage / décodage.
+	//==========================================================================
 	/**
 	 * Obtenir le vecteur de déplacement dans le bloc spécifié entre deux
 	 * trames, tel que la somme des différences dans le bloc translaté soit
@@ -147,10 +176,89 @@ public class VideoEncoder
 		return movementMap;
 	}
 	
+	/**
+	 * Obtenir la matrice de coefficients de la DCT par bloc des erreurs de
+	 * prédiction spécifiées.
+	 * 
+	 * @param predError
+	 *            carte des erreurs de prédiction.
+	 * @param firstFrame
+	 *            true si cette trame est la première, ie: "Intra".
+	 * @return matrice de coefficients de la DCT par bloc des erreurs de
+	 *         prédiction spécifiées.
+	 */
+	private static double[][] getPredictionErrorCoeff(final int[][] predError, final boolean firstFrame)
+	{
+		final int h = predError.length,
+				  w = predError[0].length;
+		
+		double[][] predErrorCoeffs = DCT.blockTransform(Matrices.toDouble(predError), DCT_BLOCK_SIZE, DCT_BLOCK_SIZE);
+		
+		// Taille / échelle du quantificateur.
+		final int quantifScale = 5;
+		
+		// Quantification coefficients.
+
+		// On sépare la boucle trame intra / prédite pour accélérer et ne pas
+		// faire la vérification à chaque itération.
+		if (firstFrame)	// # Trame intra
+		{
+			for (int y = 0; y < h; ++y)
+			{
+				for (int x = 0; x < w; ++x)
+				{
+					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y][x]) / 
+											(2*quantifScale);
+				}
+			}
+		}
+		else			// # Trame prédite
+		{
+			for (int y = 0; y < h; ++y)
+			{
+				for (int x = 0; x < w; ++x)
+				{
+					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y][x] - 
+												Math.signum(predErrorCoeffs[y][x])*quantifScale) / 
+											(2*quantifScale);
+				}
+			}
+		}
+		return predErrorCoeffs;
+	}
+	
+	/**
+	 * Obtenir la carte des erreurs de prédiction <b>quantifiée</b> à partir de
+	 * la matrice de coefficient DCT par bloc.
+	 * 
+	 * @param predError
+	 *            matrice des coefficents de la DCT par bloc des erreurs de
+	 *            prédiction.
+	 * @return carte des erreurs de prédiction à partir de la matrice de
+	 *         coefficient DCT par bloc.
+	 */
+	private static int[][] getPredictionErrorMap(final double[][] predErrorDCT)
+	{
+		final int h = predErrorDCT.length,
+				  w = predErrorDCT[0].length;
+		
+		final double[][] predErrorDouble = DCT.inverseBlockTransform(predErrorDCT, DCT_BLOCK_SIZE, DCT_BLOCK_SIZE);
+		final int[][] predError = new int[h][w];
+		
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				predError[y][x] = (int) Math.max(0, Math.min(predErrorDouble[y][x], 255));
+			}
+		}
+		
+		return predError;
+	}
+	
 	//===================================================================================================
 	// Prédicteurs avec compensation de mouvement.
 	//===================================================================================================
-	
 	/**
 	 * Prédire une trame à partir de la précédente, avec compensation de
 	 * mouvement.
@@ -248,24 +356,24 @@ public class VideoEncoder
 			{
 				prevFrameRec = frame;
 				// L'envoyer sans prédiction.
-				return new EncodedFrame(prevFrameRec);
+				return new EncodedFrame(getPredictionErrorCoeff(prevFrameRec, true));
 			}
 			
 			// On calcul la carte de compensation de mouvement des blocs.
-			Vector2D[][] blockMovementMap = getBlockMovementMap(prevFrameRec, frame, BLOCK_SIZE, BLOCK_SIZE);
+			Vector2D[][] blockMovementMap = getBlockMovementMap(prevFrameRec, frame, MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
 			
 			// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
-			int[][] predError = predict(prevFrameRec, frame, blockMovementMap, BLOCK_SIZE, BLOCK_SIZE);
+			int[][] predError = predict(prevFrameRec, frame, blockMovementMap, MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
 			// On calcul la trame actuelle reconstruite.
-			int[][] frameRec = reconstruct(prevFrameRec, predError, blockMovementMap, BLOCK_SIZE, BLOCK_SIZE);
+			int[][] frameRec = reconstruct(prevFrameRec, predError, blockMovementMap, MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
 			
 			prevFrameRec = frameRec;
-			return new EncodedFrame(predError, blockMovementMap);
+			return new EncodedFrame(getPredictionErrorCoeff(predError, false), blockMovementMap);
 		}
 	}
 	
 	/**
-	 * Decodeur de trames avec compensation de mouvement.
+	 * Décodeur de trames avec compensation de mouvement.
 	 */
 	private static class Decoder implements Function<EncodedFrame, int[][]>
 	{
@@ -287,14 +395,14 @@ public class VideoEncoder
 			// Première trame.
 			if (prevFrameRec == null)
 			{
-				prevFrameRec = frame.getPredictionErrors();
+				prevFrameRec = getPredictionErrorMap(frame.getPredictionErrorCoeffs());
 				return prevFrameRec;
 			}
 			
 			// La trame est une matrice d'erreurs de prédiction.
-			int[][] predError = frame.getPredictionErrors();
+			int[][] predError = getPredictionErrorMap(frame.getPredictionErrorCoeffs());
 			// On calcul la trame actuelle reconstruite.
-			int[][] frameRec = reconstruct(prevFrameRec, predError, frame.getBlockMovementMap(), BLOCK_SIZE, BLOCK_SIZE);
+			int[][] frameRec = reconstruct(prevFrameRec, predError, frame.getBlockMovementMap(), MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
 			
 			prevFrameRec = frameRec;
 			return frameRec;
@@ -316,6 +424,7 @@ public class VideoEncoder
 	 *            trame à prédire.
 	 * @return matrice des erreurs.
 	 */
+	@Deprecated
 	private static int[][] predict(final int[][] prevFrameRec, final int[][] frame)
 	{
 		final int h = frame.length,
@@ -342,6 +451,7 @@ public class VideoEncoder
 	 *            erreurs de prédiction.
 	 * @return trame reconstruite.
 	 */
+	@Deprecated
 	private static int[][] reconstruct(final int[][] prevFrameRec, final int[][] predError)
 	{
 		final int h = prevFrameRec.length,
@@ -385,7 +495,7 @@ public class VideoEncoder
 			{
 				prevFrameRec = frame;
 				// L'envoyer sans prédiction.
-				return new EncodedFrame(prevFrameRec);
+				return new EncodedFrame(getPredictionErrorCoeff(prevFrameRec, true));
 			}
 			
 			// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
@@ -394,7 +504,7 @@ public class VideoEncoder
 			int[][] frameRec = reconstruct(prevFrameRec, predError);
 			
 			prevFrameRec = frameRec;
-			return new EncodedFrame(predError);
+			return new EncodedFrame(getPredictionErrorCoeff(predError, false));
 		}
 	}
 	
@@ -423,12 +533,12 @@ public class VideoEncoder
 			// Première trame.
 			if (prevFrameRec == null)
 			{
-				prevFrameRec = frame.getPredictionErrors();
+				prevFrameRec = getPredictionErrorMap(frame.getPredictionErrorCoeffs());
 				return prevFrameRec;
 			}
 			
 			// La trame est une matrice d'erreurs de prédiction.
-			int[][] predError = frame.getPredictionErrors();
+			int[][] predError = getPredictionErrorMap(frame.getPredictionErrorCoeffs());
 			// On calcul la trame actuelle reconstruite.
 			int[][] frameRec = reconstruct(prevFrameRec, predError);
 			

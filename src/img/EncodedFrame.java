@@ -8,33 +8,33 @@ import img.math.Vector2D;
 public class EncodedFrame
 {
 	/**
-	 * Matrice des erreurs de prédiction.
+	 * Matrice des coefficients de la DCT des erreurs de prédiction.
 	 */
-	private final int[][] predictionErrors;
+	private final double[][] predictionErrorCoeffs;
 	/**
 	 * Vecteurs de déplacement des blocs utilisés pour la compensation de
 	 * mouvements.
 	 */
 	private final Vector2D[][] blockMovementMap;
 	
-	public EncodedFrame(final int[][] predictionErrors, final Vector2D[][] blockMovementMap)
+	public EncodedFrame(final double[][] predictionErrorCoeffs, final Vector2D[][] blockMovementMap)
 	{
-		this.predictionErrors = predictionErrors;
+		this.predictionErrorCoeffs = predictionErrorCoeffs;
 		this.blockMovementMap =	blockMovementMap;
 	}
 	
-	public EncodedFrame(final int[][] predictionErrors)
+	public EncodedFrame(final double[][] predictionErrors)
 	{
 		this(predictionErrors, null);
 	}
 	
 	/**
-	 * Obtenir la matrice des erreurs de prédiction.
-	 * @return matrice des erreurs de prédiction.
+	 * Obtenir la matrice des coefficients de la DCT des erreurs de prédiction.
+	 * @return matrice des coefficients de la DCT des erreurs de prédiction.
 	 */
-	public int[][] getPredictionErrors()
+	public double[][] getPredictionErrorCoeffs()
 	{
-		return predictionErrors;
+		return predictionErrorCoeffs;
 	}
 	
 	/**
