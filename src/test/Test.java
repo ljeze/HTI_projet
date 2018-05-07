@@ -13,6 +13,7 @@ import img.Images;
 import img.VideoEncoder;
 import img.Videos;
 import img.math.Complex;
+import img.math.Matrices;
 import img.math.transforms.DCT;
 import img.math.transforms.FFT;
 import test.plot.Plot;
@@ -70,6 +71,35 @@ public class Test
 	}
 	
 	/**
+	 * Tester la DCT en 2D.
+	 * @throws IllegalArgumentException 
+	 * @throws FileNotFoundException 
+	 */
+	public static void testDCT2D() throws FileNotFoundException, IllegalArgumentException
+	{
+		int[][] img = Images.readGray(getTestFile("letter_A.bmp"));
+		System.out.println(Arrays.deepToString(DCT.transform2D(Matrices.toDouble(img))));
+		
+		/*int[][] tmp = new int[128][256];
+		
+		for (int i = 0; i < tmp.length; ++i)
+		for (int j = 0; j < tmp[0].length; ++j)
+			tmp[i][j] = img[i][j];
+		
+		img = tmp;
+		
+		final double[][] imgRec = DCT.inverseTransform2D(DCT.transform2D(Matrices.toDouble(img)));
+		for (int y = 0; y < img.length; ++y)
+		{
+			for (int x = 0; x < img[0].length; ++x)
+			{
+				img[y][x] = (int) Math.min(255, Math.max(0, imgRec[y][x]));
+			}
+		}
+		Plot.showImg(Images.toJavaImg(img));*/
+	}
+	
+	/**
 	 * Tester la lecture d'images et leur affichage.
 	 * @throws FileNotFoundException
 	 */
@@ -99,16 +129,17 @@ public class Test
 	{
 		// testFFT();
 		// testDCT();
+		
 		// testImageRead();
 		
-		/*try
+		try
 		{
-			testVideoEncoding();
+			testDCT2D();
+			//testVideoEncoding();
 		} catch (FileNotFoundException e)
 		{
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/
+		}
 	}
 
 }
