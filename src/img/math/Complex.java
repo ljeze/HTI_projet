@@ -73,4 +73,25 @@ public class Complex
 	{
 		return new Complex(real*z.img + img*z.real, real*z.real - img*z.img);
 	}
+	
+	/**
+	 * Obtenir la multiplication entre ce nombre complexe et un scalaire.
+	 * 
+	 * @param f
+	 *            scalaire à multiplier.
+	 * @return multiplication entre ce nombre complexe et un scalaire.
+	 */
+	public Complex mult(final double f)
+	{
+		return new Complex(img*f, real*f);
+	}
+	
+	/**
+	 * Obtenir le conjugué de ce nombre complexe.
+	 * @return conjugué de ce nombre complexe.
+	 */
+	public Complex conjugate()
+	{
+		return new Complex(-img, real);
+	}
 }

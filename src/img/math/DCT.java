@@ -32,9 +32,10 @@ public class DCT
 		// rowDCT.
 		
 		// Pour chaque colonne...
+		double[] column = new double[h];
+		
 		for (int x = 0; x < w; ++x)
 		{
-			double[] column = new double[h];
 			for (int y = 0; y < h; ++y)
 			{
 				column[y] = rowDCT[y][x];
@@ -50,7 +51,25 @@ public class DCT
 		
 		return matrixDCT;
 	}
-	
+
+	/**
+	 * TODO : Finir transformée DCT bloc.
+	 * 
+	public static double[][] blockTransform(final double[][] matrix, final int blockW, final int blockH)
+	{
+		final int h = matrix.length,
+				  w = matrix[0].length;
+		
+		//final double[][] blockDCT = new double[];
+		for (int by = 0; by < blockH; ++by)
+		{
+			for (int bx = 0; bx < blockW; ++bx)
+			{
+				
+			}
+		}
+	}*/
+
 	/**
 	 * Obtenir l'extension symétrique du vecteur spécifié. L'extension
 	 * symétrique d'un vecteur (u0, u1, ..., un) sera 

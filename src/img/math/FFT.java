@@ -38,6 +38,41 @@ public class FFT
 	}
 	
 	/**
+	 * Faire une transformée inverse de fourrier rapide (FFT) du vecteur
+	 * spécifié.<br>
+	 * <b>La taille du vecteur doit être une puissance de deux.</b>
+	 * 
+	 * @param vector
+	 *            vecteur à transformer inversement.
+	 * @return FFT inverse du vecteur.
+	 * @throws IllegalArgumentException
+	 *             si la taille du vecteur n'est pas une puissance de 2.
+	 */
+	public static double[] inverseTransform(final Complex[] vectorFFT) throws IllegalArgumentException
+	{
+		// Vérifier si la taille du vecteur n'est pas une puissance de deux.
+		
+		// On utilise la représentation binaire du nombre pour vérifier
+		// rapidement.
+		if ((vectorFFT.length & (vectorFFT.length - 1)) == 0)
+		{
+			throw new IllegalArgumentException("La taille du vecteur (taille de " + vectorFFT.length + ") n'est pas une puissance de deux.");
+		}
+		
+		final Complex[] vectorComplex = recursiveTransform(vectorFFT);
+		// Transformer le vecteur de double en vecteur de nombres complexes.
+		final double[] vector = new double[vectorComplex.length];
+		
+		for (int i = 0; i < vector.length; ++i)
+		{
+			vector[i] = vectorComplex[i].realPart();
+		}
+		
+		return vector;
+	}
+	
+	
+	/**
 	 * Sous échantillonnage / décimation du vecteur spécifié d'un facteur 1/2
 	 * avec un décalage donné. Ainsi,
 	 * <ul>
@@ -109,4 +144,36 @@ public class FFT
 		
 		return vectorFFT;
 	}
+	
+	/**
+	 * Fonction réccursive pour calculer l'inverse de la FFT d'un vecteur donné.
+	 * <br>
+	 * <b>La taille du vecteur doit être une puissance de deux.</b>
+	 * 
+	 * @param vector
+	 *            vecteur complexe auquel appliquer la transformation inverse.
+	 * @return vecteur transformé inverse.
+	 */
+	public static Complex[] recursiveInverseTransform(final Complex[] vectorFFT)
+	{
+		final int n = vectorFFT.length;
+		
+		Complex[] vector = new Complex[n];
+		// Conjuguer le vecteur.
+		for (int i = 0; i < n; ++i)
+		{
+			vector[i] = vectorFFT[i].conjugate();
+		}
+		
+		// Calculer sa FFT.
+		vector = recursiveTransform(vector);
+		
+		for (int i = 0; i < n; ++i)
+		{
+			vector[i] = vector[i].conjugate().mult(1.0/n);
+		}
+		
+		return vector;
+	}
+	
 }
