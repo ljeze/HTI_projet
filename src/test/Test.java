@@ -68,6 +68,38 @@ public class Test
 		System.out.println("X = " + Arrays.toString(sampleVector));
 		System.out.println("DCT(X) = " + Arrays.toString(sampleVectorDCT));
 		System.out.println("DCT-1(DCT(X)) = " + Arrays.toString(DCT.inverseTransform(sampleVectorDCT)));
+		
+		// Nombre de tests échoués.
+		int nFail = 0;
+		
+		System.out.println("______________ Tests vecteurs aléatoires ______________________");
+		
+		for (int i = 0; i < 500; ++i)
+		{
+			double[] randomVector = IntStream.range(0, 32).mapToDouble(k->(Math.random()-0.5)*10000).toArray();
+			double[] randomVectorRec = DCT.inverseTransform(DCT.transform(randomVector));
+			System.out.println(Arrays.toString(randomVector) + "\n" + Arrays.toString(randomVectorRec));
+			// Tester si le contenu en entier est identique.
+			for (int k = 0; k < randomVector.length; ++k)
+			{
+				if ((int)randomVector[k] != (int)randomVectorRec[k])
+				{
+					System.out.println("==| Echec du test |================");
+					++nFail;
+					continue;
+				}
+			}
+			System.out.println("==| Succès du test |================");
+		}
+		
+		if (nFail == 0)
+		{
+			System.out.println("Tous les tests ont été passés avec succès.");
+		}
+		else
+		{
+			System.out.println("Echec de " + nFail + " test.");
+		}
 	}
 	
 	/**
@@ -75,7 +107,46 @@ public class Test
 	 * @throws IllegalArgumentException 
 	 * @throws FileNotFoundException 
 	 */
-	public static void testDCT2D() throws FileNotFoundException, IllegalArgumentException
+	public static void testDCT2D()
+	{
+		final int h = 8,
+				  w = 8;
+		
+		double[][] randomMatrix = new double[h][w];
+		
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				randomMatrix[y][x] = (Math.random()-0.5)*10000;
+			}
+		}
+		
+		double[][] randomMatrixRec = DCT.inverseTransform2D(DCT.transform2D(randomMatrix));
+		
+		System.out.println(Arrays.deepToString(randomMatrix) + "\n" + Arrays.deepToString(randomMatrixRec));
+		
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				if ((int)randomMatrix[y][x] != (int)randomMatrixRec[y][x])
+				{
+					System.out.println("==| Echec du test |================");
+					//++nFail;
+					//continue;
+					return;
+				}
+			}
+		}
+		
+		System.out.println("==| Succès du test |================");
+	}
+	
+	/**
+	 * Tester la DCT 2D en blocs.
+	 */
+	public static void testBlockDCT2D() throws FileNotFoundException, IllegalArgumentException
 	{
 		int[][] img = Images.readGray(getTestFile("mas082.bmp"));
 		//System.out.println(Arrays.deepToString(DCT.transform2D(Matrices.toDouble(img))));
@@ -88,7 +159,7 @@ public class Test
 		
 		img = tmp;
 		
-		final double[][] imgRec = DCT.inverseTransform2D(DCT.transform2D(Matrices.toDouble(img)));
+		final double[][] imgRec = DCT.inverseBlockTransform(DCT.blockTransform(Matrices.toDouble(img), 8, 8), 8, 8);
 		for (int y = 0; y < img.length; ++y)
 		{
 			for (int x = 0; x < img[0].length; ++x)
@@ -129,13 +200,14 @@ public class Test
 	{
 		// testFFT();
 		// testDCT();
+		// testDCT2D();
 		
 		// testImageRead();
 		
 		try
 		{
-			testDCT2D();
-			//testVideoEncoding();
+			//testBlockDCT2D();
+			testVideoEncoding();
 		} catch (FileNotFoundException e)
 		{
 			e.printStackTrace();

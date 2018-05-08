@@ -92,7 +92,7 @@ public class DCT
 			matrix[y] = inverseTransform(matrix[y]);
 		}
 		
-		return matrixDCT;
+		return matrix;
 	}
 	
 	/**
@@ -171,7 +171,7 @@ public class DCT
 			}
 		}
 		
-		return matrixDCT;
+		return matrix;
 	}
 	
 	/**

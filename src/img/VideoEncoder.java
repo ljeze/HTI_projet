@@ -207,7 +207,7 @@ public class VideoEncoder
 			{
 				for (int x = 0; x < w; ++x)
 				{
-					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y][x]) / 
+					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y%DCT_BLOCK_SIZE][x%DCT_BLOCK_SIZE]) / 
 											(2*quantifScale);
 				}
 			}
@@ -218,7 +218,7 @@ public class VideoEncoder
 			{
 				for (int x = 0; x < w; ++x)
 				{
-					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y][x] - 
+					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y%DCT_BLOCK_SIZE][x%DCT_BLOCK_SIZE] - 
 												Math.signum(predErrorCoeffs[y][x])*quantifScale) / 
 											(2*quantifScale);
 				}
