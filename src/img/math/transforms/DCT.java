@@ -37,17 +37,12 @@ public class DCT
 		
 		for (int x = 0; x < w; ++x)
 		{
-			for (int y = 0; y < h; ++y)
-			{
-				column[y] = matrixDCT[y][x];
-			}
+			// Copier la colonne x de matrixDCT dans le vecteur column.
+			Matrices.columnCopy(matrixDCT, x, column);
 			
-			// Calculer la DCT de la colonne de rowDCT.
-			double[] columnDCT = transform(column);
-			for (int y = 0; y < h; ++y)
-			{
-				matrixDCT[y][x] = columnDCT[y];
-			}
+			// Calculer la DCT de la colonne de rowDCT et copier ce vecteur dans
+			// la colonne x de matrixDCT.
+			Matrices.columnCopy(transform(column), matrixDCT, x);
 		}
 		
 		return matrixDCT;
@@ -72,17 +67,12 @@ public class DCT
 		
 		for (int x = 0; x < w; ++x)
 		{
-			for (int y = 0; y < h; ++y)
-			{
-				columnDCT[y] = matrixDCT[y][x];
-			}
+			// Copier la colonne x de matrixDCT dans le vecteur columnDCT.
+			Matrices.columnCopy(matrixDCT, x, columnDCT);
 			
-			// Calculer la DCT inverse de la colonne.
-			double[] column = inverseTransform(columnDCT);
-			for (int y = 0; y < h; ++y)
-			{
-				matrix[y][x] = column[y];
-			}
+			// Calculer la DCT inverse de la colonne et copier ce vecteur dans
+			// la colonne x de matrix.
+			Matrices.columnCopy(inverseTransform(columnDCT), matrix, x);
 		}
 		
 		// Calculer la transformée inverse sur chaque ligne de l'image obtenue.

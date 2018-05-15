@@ -63,15 +63,6 @@ public class FFT
 		
 		final Complex[] vectorComplex = recursiveInverseTransform(vectorFFT);
 		
-		// Transformer le vecteur de double en vecteur de nombres complexes.
-		/*final double[] vector = new double[vectorComplex.length];
-		
-		for (int i = 0; i < vector.length; ++i)
-		{
-			vector[i] = vectorComplex[i];
-		}
-		*/
-		
 		return vectorComplex;
 	}
 	

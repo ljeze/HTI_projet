@@ -206,8 +206,8 @@ public class Test
 		
 		try
 		{
-			//testBlockDCT2D();
-			testVideoEncoding();
+			testBlockDCT2D();
+			//testVideoEncoding();
 		} catch (FileNotFoundException e)
 		{
 			e.printStackTrace();
