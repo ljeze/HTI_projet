@@ -3,6 +3,7 @@ package img;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import img.EncodedFrame.FrameType;
 import img.math.Matrices;
 import img.math.Vector2D;
 import img.math.transforms.DCT;
@@ -356,7 +357,7 @@ public class VideoEncoder
 			{
 				prevFrameRec = frame;
 				// L'envoyer sans prédiction.
-				return new EncodedFrame(getPredictionErrorCoeff(prevFrameRec, true));
+				return EncodedFrame.intraFrame(getPredictionErrorCoeff(prevFrameRec, true));
 			}
 			
 			// On calcul la carte de compensation de mouvement des blocs.
@@ -368,7 +369,7 @@ public class VideoEncoder
 			int[][] frameRec = reconstruct(prevFrameRec, predError, blockMovementMap, MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
 			
 			prevFrameRec = frameRec;
-			return new EncodedFrame(getPredictionErrorCoeff(predError, false), blockMovementMap);
+			return EncodedFrame.predictedFrame(getPredictionErrorCoeff(predError, false), blockMovementMap);
 		}
 	}
 	
@@ -392,8 +393,8 @@ public class VideoEncoder
 		@Override
 		public int[][] apply(final EncodedFrame frame)
 		{
-			// Première trame.
-			if (prevFrameRec == null)
+			// Trame Intra.
+			if (frame.getType() == FrameType.I)
 			{
 				prevFrameRec = getPredictionErrorMap(frame.getPredictionErrorCoeffs());
 				return prevFrameRec;
@@ -495,7 +496,7 @@ public class VideoEncoder
 			{
 				prevFrameRec = frame;
 				// L'envoyer sans prédiction.
-				return new EncodedFrame(getPredictionErrorCoeff(prevFrameRec, true));
+				return EncodedFrame.intraFrame(getPredictionErrorCoeff(prevFrameRec, true));
 			}
 			
 			// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
@@ -504,7 +505,7 @@ public class VideoEncoder
 			int[][] frameRec = reconstruct(prevFrameRec, predError);
 			
 			prevFrameRec = frameRec;
-			return new EncodedFrame(getPredictionErrorCoeff(predError, false));
+			return EncodedFrame.predictedFrame(getPredictionErrorCoeff(predError, false), null);
 		}
 	}
 	
@@ -530,8 +531,8 @@ public class VideoEncoder
 		@Override
 		public int[][] apply(final EncodedFrame frame)
 		{
-			// Première trame.
-			if (prevFrameRec == null)
+			// Trame Intra.
+			if (frame.getType() == FrameType.I)
 			{
 				prevFrameRec = getPredictionErrorMap(frame.getPredictionErrorCoeffs());
 				return prevFrameRec;
