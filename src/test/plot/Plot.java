@@ -30,4 +30,5 @@ public class Plot
 		frame.setVisible(true);
 		frame.pack();
 	}
+	
 }

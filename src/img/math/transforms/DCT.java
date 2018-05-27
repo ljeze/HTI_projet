@@ -124,7 +124,7 @@ public class DCT
 		
 		return matrixDCT;
 	}
-
+	
 	/**
 	 * Faire une transformée DCT en blocs inverse d'une matrice 2D.
 	 * 
@@ -196,6 +196,7 @@ public class DCT
 	 *            vecteur à transformer.
 	 * @return Transformée en cos discret du vecteur 1D.
 	 */
+	/*
 	public static double[] transform(final double[] vector)
 	{
 		final int n = vector.length;
@@ -212,6 +213,35 @@ public class DCT
 			vectorDCT[i] = symExtFFT[i].mult(Complex.exp(-Math.PI*i/(2*n))).realPart();
 		}
 		
+		vectorDCT[0] *= Math.sqrt(2.0/n);
+		for (int i = 1; i < n; ++i)
+		{
+			vectorDCT[i] /= Math.sqrt(n);
+		}
+		return vectorDCT;
+	}
+	*/
+	
+	public static double[] transform(final double[] vector)
+	{
+		final int N = vector.length;
+		final double[] vectorDCT = new double[vector.length];
+		// k = 0
+		{
+			for (int n = 0; n < N; ++n)
+			{
+				vectorDCT[0] += 1.0/Math.sqrt(N) * vector[n];
+			}
+		}
+		
+		for (int k = 1; k < N; ++k)
+		{
+			for (int n = 0; n < N; ++n)
+			{
+				vectorDCT[k] += Math.sqrt(2.0/N) * Math.cos((Math.PI*(2*n+1)*k)/(2*N)) * vector[n];
+			}
+		}
+		
 		return vectorDCT;
 	}
 	
@@ -222,9 +252,16 @@ public class DCT
 	 *            vecteur 1D à transformer inversement.
 	 * @return Transformée inverse en cas discret du vecteur 1D.
 	 */
+	/*
 	public static double[] inverseTransform(final double[] vectorDCT)
 	{
 		final int n = vectorDCT.length;
+		
+		vectorDCT[0] *= Math.sqrt(n/2.0);
+		for (int i = 1; i < n; ++i)
+		{
+			vectorDCT[i] *= Math.sqrt(n);
+		}
 		
 		// On reconstitue le vecteur [vectorDCT[0], vectorDCT[1], ..., vectorDCT[n-1], 0, vectorDCT[n-1]*, ..., vectorDCT[1]*].
 		final Complex[] symExtFFT = new Complex[2*n];
@@ -245,6 +282,24 @@ public class DCT
 		for (int i = 0; i < n; ++i)
 		{
 			vector[i] = symExtComplex[n + i].realPart();
+		}
+		
+		return vector;
+	}*/
+	
+	public static double[] inverseTransform(final double[] vectorDCT)
+	{
+		final int N = vectorDCT.length;
+		final double[] vector = new double[N];
+		
+		for (int k = 0; k < N; ++k)
+		{
+			// n = 0
+			vector[k] = vectorDCT[0] * 1.0/Math.sqrt(N);
+			for (int n = 1; n < N; ++n)
+			{
+				vector[k] += Math.sqrt(2.0/N) * Math.cos((Math.PI*(2*k+1)*n)/(2*N)) * vectorDCT[n];
+			}
 		}
 		
 		return vector;

@@ -160,6 +160,7 @@ public class Test
 		img = tmp;
 		
 		final double[][] imgRec = DCT.inverseBlockTransform(DCT.blockTransform(Matrices.toDouble(img), 8, 8), 8, 8);
+		
 		for (int y = 0; y < img.length; ++y)
 		{
 			for (int x = 0; x < img[0].length; ++x)
@@ -167,7 +168,7 @@ public class Test
 				img[y][x] = (int) Math.min(255, Math.max(0, imgRec[y][x]));
 			}
 		}
-		Plot.showImg(Images.toJavaImg(img));
+		Plot.showImg(Images.grayToJavaImg(img));
 	}
 	
 	/**
@@ -176,8 +177,8 @@ public class Test
 	 */
 	public static void testImageRead() throws FileNotFoundException
 	{
-		final int[][] img = Images.readGray(Paths.get("C:\\Users\\Loic\\Pictures\\Fujiview.jpg"));
-		Plot.showImg(Images.toJavaImg(img));
+		final int[][] img = Images.readGray(getTestFile("mas082.bmp"));
+		Plot.showImg(Images.grayToJavaImg(img));
 	}
 	
 	/**
@@ -186,13 +187,22 @@ public class Test
 	 */
 	public static void testVideoEncoding() throws FileNotFoundException
 	{
-		// Exemple : charger une séquence de 5 images nommées sequence1.jpg, sequence2.jpg, ..., sequence5.jpg .
+		// Exemple : charger une séquence de 4 images nommées mas082.jpg, mas083.jpg, ..., mas085.jpg .
 		Stream<EncodedFrame> encodedSequence = VideoEncoder.encode(
-			Videos.readGray(getTestFile("mas"))
+			Videos.readGray(getTestFile("mas"))/*.map(img->
+			{
+				int[][] tmp = new int[128][256];
+				
+				for (int i = 0; i < tmp.length; ++i)
+				for (int j = 0; j < tmp[0].length; ++j)
+					tmp[i][j] = img[i][j];
+				
+				return tmp;
+			})*/
 		);
 		
 		VideoEncoder.decode(encodedSequence)
-					.map(Images::toJavaImg)
+					.map(Images::grayToJavaImg)
 					.forEach(Plot::showImg);
 	}
 	
@@ -201,13 +211,32 @@ public class Test
 		// testFFT();
 		// testDCT();
 		// testDCT2D();
-		
-		// testImageRead();
+		/*
+		try
+		{
+			int[][] img = Images.readGray(getTestFile("mas082.bmp"));
+			int[][] tmp = new int[128][256];
+			
+			for (int i = 0; i < tmp.length; ++i)
+			for (int j = 0; j < tmp[0].length; ++j)
+				tmp[i][j] = img[i][j];
+			
+			img = tmp;
+			
+			double[][] dct = DCT.transform2D(Matrices.toDouble(img));
+			System.out.println(Arrays.deepToString(dct));
+		} catch (FileNotFoundException | IllegalArgumentException e1)
+		{
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		*/
 		
 		try
 		{
-			testBlockDCT2D();
-			//testVideoEncoding();
+			//testImageRead();
+			//testBlockDCT2D();
+			testVideoEncoding();
 		} catch (FileNotFoundException e)
 		{
 			e.printStackTrace();

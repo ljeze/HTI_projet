@@ -19,15 +19,15 @@ public class VideoEncoder
 	/**
 	 * Taille des blocs utilisés pour la compensation de mouvement.
 	 */
-	private static final int MOVEMENT_BLOCK_SIZE = 8;
+	private static int movementBlockSize = 8;
 	/**
 	 * Taille des blocs utilisés pour la DCT en bloc.
 	 */
-	private static final int DCT_BLOCK_SIZE = 8;
+	private static int dctBlockSize = 8;
 	/**
 	 * Matrice de poids pour la quantification.
 	 */
-	private static final int[][] QUANTIF_WEIGHTS = 
+	private static final double[][] QUANTIF_WEIGHTS = 
 	{
 		{ 8 , 17, 18, 19, 21, 23, 25, 27},
 		{ 17, 18, 19, 21, 23, 25, 27, 28},
@@ -38,6 +38,30 @@ public class VideoEncoder
 		{ 25, 26, 28, 30, 32, 35, 38, 41},
 		{ 27, 28, 30, 32, 35, 38, 41, 45},
 	};
+	
+	/**
+	 * Définir la taille des blocks dct. Fonction temporaire, à faire : mettre
+	 * plutôt en argument de decode et rajouter attribut encodingInfo à
+	 * encodedFrame.
+	 * 
+	 * @param dctBlockSize
+	 */
+	public static void setDctBlockSize(final int dctBlockSize)
+	{
+		VideoEncoder.dctBlockSize = dctBlockSize;
+	}
+	
+	/**
+	 * Définir la taille des blocks pour la compensation de mouvement. Fonction
+	 * temporaire, à faire : mettre plutôt en argument de decode et rajouter
+	 * attribut encodingInfo à encodedFrame.
+	 * 
+	 * @param movementBlockSize
+	 */
+	public static void setMovementBlockSize(final int movementBlockSize)
+	{
+		VideoEncoder.movementBlockSize = movementBlockSize;
+	}
 	
 	//==========================================================================
 	// Fonctions principales d'encodage / décodage.
@@ -193,10 +217,10 @@ public class VideoEncoder
 		final int h = predError.length,
 				  w = predError[0].length;
 		
-		double[][] predErrorCoeffs = DCT.blockTransform(Matrices.toDouble(predError), DCT_BLOCK_SIZE, DCT_BLOCK_SIZE);
+		double[][] predErrorCoeffs = DCT.blockTransform(Matrices.toDouble(predError), dctBlockSize, dctBlockSize);
 		
 		// Taille / échelle du quantificateur.
-		final int quantifScale = 5;
+		final double quantifScale = 100000;
 		
 		// Quantification coefficients.
 
@@ -204,12 +228,12 @@ public class VideoEncoder
 		// faire la vérification à chaque itération.
 		if (firstFrame)	// # Trame intra
 		{
-			for (int y = 0; y < h; ++y)
+			for (int y = 0; y < h; y++)
 			{
-				for (int x = 0; x < w; ++x)
+				for (int x = 0; x < w; x++)
 				{
-					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y%DCT_BLOCK_SIZE][x%DCT_BLOCK_SIZE]) / 
-											(2*quantifScale);
+					/*predErrorCoeffs[y][x] = ((predErrorCoeffs[y][x]*16.0)/QUANTIF_WEIGHTS[y%DCT_BLOCK_SIZE][x%DCT_BLOCK_SIZE]) / 
+											(2.0*quantifScale);*/
 				}
 			}
 		}
@@ -219,9 +243,10 @@ public class VideoEncoder
 			{
 				for (int x = 0; x < w; ++x)
 				{
-					predErrorCoeffs[y][x] = (predErrorCoeffs[y][x]*16/QUANTIF_WEIGHTS[y%DCT_BLOCK_SIZE][x%DCT_BLOCK_SIZE] - 
+					predErrorCoeffs[y][x] = 0;/*
+							(predErrorCoeffs[y][x]*16.0/QUANTIF_WEIGHTS[y%dctBlockSize][x%dctBlockSize] - 
 												Math.signum(predErrorCoeffs[y][x])*quantifScale) / 
-											(2*quantifScale);
+											(2*quantifScale);*/
 				}
 			}
 		}
@@ -243,14 +268,14 @@ public class VideoEncoder
 		final int h = predErrorDCT.length,
 				  w = predErrorDCT[0].length;
 		
-		final double[][] predErrorDouble = DCT.inverseBlockTransform(predErrorDCT, DCT_BLOCK_SIZE, DCT_BLOCK_SIZE);
+		final double[][] predErrorDouble = DCT.inverseBlockTransform(predErrorDCT, dctBlockSize, dctBlockSize);
 		final int[][] predError = new int[h][w];
 		
 		for (int y = 0; y < h; ++y)
 		{
 			for (int x = 0; x < w; ++x)
 			{
-				predError[y][x] = (int) Math.max(0, Math.min(predErrorDouble[y][x], 255));
+				predError[y][x] = (int) Math.max(-255, Math.min(predErrorDouble[y][x], 255));
 			}
 		}
 		
@@ -361,12 +386,12 @@ public class VideoEncoder
 			}
 			
 			// On calcul la carte de compensation de mouvement des blocs.
-			Vector2D[][] blockMovementMap = getBlockMovementMap(prevFrameRec, frame, MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
+			Vector2D[][] blockMovementMap = getBlockMovementMap(prevFrameRec, frame, movementBlockSize, movementBlockSize);
 			
 			// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
-			int[][] predError = predict(prevFrameRec, frame, blockMovementMap, MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
+			int[][] predError = predict(prevFrameRec, frame, blockMovementMap, movementBlockSize, movementBlockSize);
 			// On calcul la trame actuelle reconstruite.
-			int[][] frameRec = reconstruct(prevFrameRec, predError, blockMovementMap, MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
+			int[][] frameRec = reconstruct(prevFrameRec, predError, blockMovementMap, movementBlockSize, movementBlockSize);
 			
 			prevFrameRec = frameRec;
 			return EncodedFrame.predictedFrame(getPredictionErrorCoeff(predError, false), blockMovementMap);
@@ -403,7 +428,7 @@ public class VideoEncoder
 			// La trame est une matrice d'erreurs de prédiction.
 			int[][] predError = getPredictionErrorMap(frame.getPredictionErrorCoeffs());
 			// On calcul la trame actuelle reconstruite.
-			int[][] frameRec = reconstruct(prevFrameRec, predError, frame.getBlockMovementMap(), MOVEMENT_BLOCK_SIZE, MOVEMENT_BLOCK_SIZE);
+			int[][] frameRec = reconstruct(prevFrameRec, predError, frame.getBlockMovementMap(), movementBlockSize, movementBlockSize);
 			
 			prevFrameRec = frameRec;
 			return frameRec;

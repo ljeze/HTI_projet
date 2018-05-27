@@ -2,7 +2,6 @@ package img.math;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * Classe utilitaire pour les matrices.
@@ -102,6 +101,32 @@ public class Matrices
 		}
 		
 		return doubleMatrix;
+	}
+	
+	/**
+	 * Obtenir une matrice d'entiers à partir d'une matrice de doubles.
+	 * 
+	 * @param matrix
+	 * @param low
+	 * @param high
+	 * @return
+	 */
+	public static int[][] toInt(final double[][] matrix, final int low, final int high)
+	{
+		final int h = matrix.length,
+				  w = matrix[0].length;
+		
+		final int[][] intMatrix = new int[h][w];
+		
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				intMatrix[y][x] = (int) Math.max(low, Math.min(matrix[y][x], high));
+			}
+		}
+		
+		return intMatrix;
 	}
 	
 	/**
