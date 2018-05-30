@@ -34,31 +34,47 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 	@Override
 	public EncodedFrame apply(final int[][] frame)
 	{
+		/**
+		 * Matrice des erreurs de prédiction.
+		 */
+		final int[][] errors;
+		/**
+		 * Matrice des erreurs transformée.
+		 */
+		final double[][] transformedErrors;
+		
+		
 		// Si l'on est sur la première trame.
 		if (prevFrameRec == null)
 		{
+			// Les erreurs sont l'image.
+			errors = frame;
+			
 			// On calcul les coefficients DCT de ces erreurs (l'image) et on applique la quantification.
-			double[][] predErrorCoeff = getPredictionErrorCoeff(frame, parameters.getDctBlockSize(),
+			transformedErrors = transformErrors(errors, parameters.getDctBlockSize(),
 					parameters.getQuantificationWeights(), parameters.getQuantificationScale(), true);
-			prevFrameRec = getPredictionErrorMap(predErrorCoeff, parameters.getDctBlockSize());
+			
+			// On reconstruit la trame.
+			prevFrameRec = inverseTransformErrors(transformedErrors, parameters.getDctBlockSize());
+			
 			// L'envoyer sans prédiction.
-			return EncodedFrame.intraFrame(predErrorCoeff);
+			return EncodedFrame.intraFrame(transformedErrors);
 		}
 		
 		// On calcul la carte de compensation de mouvement des blocs.
-		Vector2D[][] blockMovementMap = getBlockMovementMap(prevFrameRec, frame, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		Vector2D[][] blockMovementMap = computeBlockMovementMap(prevFrameRec, frame, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
-		int[][] predError = predict(prevFrameRec, frame, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		errors = computeErrors(prevFrameRec, frame, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		// On calcul les coefficients DCT de ces erreurs et on applique la quantification.
-		double[][] predErrorCoeff = getPredictionErrorCoeff(predError, parameters.getDctBlockSize(),
+		transformedErrors = transformErrors(errors, parameters.getDctBlockSize(),
 				parameters.getQuantificationWeights(), parameters.getQuantificationScale(), false);
 		
 		// On calcul la trame actuelle reconstruite.
-		int[][] frameRec = reconstruct(prevFrameRec, getPredictionErrorMap(predErrorCoeff, parameters.getDctBlockSize()), blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		int[][] frameRec = reconstruct(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()), blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;
-		return EncodedFrame.predictedFrame(predErrorCoeff, blockMovementMap);
+		return EncodedFrame.predictedFrame(transformedErrors, blockMovementMap);
 	}
 }

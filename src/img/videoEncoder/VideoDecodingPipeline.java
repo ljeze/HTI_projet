@@ -37,14 +37,14 @@ public class VideoDecodingPipeline implements Function<EncodedFrame, int[][]>
 		// Trame Intra.
 		if (frame.getType() == FrameType.I)
 		{
-			prevFrameRec = getPredictionErrorMap(frame.getPredictionErrorCoeffs(), parameters.getDctBlockSize());
+			prevFrameRec = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
 			return prevFrameRec;
 		}
 		
 		// La trame est une matrice d'erreurs de prédiction.
-		int[][] predError = getPredictionErrorMap(frame.getPredictionErrorCoeffs(), parameters.getDctBlockSize());
+		int[][] errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
 		// On calcul la trame actuelle reconstruite.
-		int[][] frameRec = reconstruct(prevFrameRec, predError, frame.getBlockMovementMap(), parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		int[][] frameRec = reconstruct(prevFrameRec, errors, frame.getBlockMovementMap(), parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;
 		return frameRec;

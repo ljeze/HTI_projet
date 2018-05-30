@@ -61,7 +61,7 @@ public class VideoEncoder
 	 * @return vecteur de déplacement optimal dans le bloc spécifié entre deux
 	 *         trames.
 	 */
-	/*package*/  static Vector2D getBlockMovement(final int[][] frame1, final int[][] frame2, final int bx, final int by,
+	/*package*/  static Vector2D computeBlockMovement(final int[][] frame1, final int[][] frame2, final int bx, final int by,
 			final int blockW, final int blockH)
 	{
 		final int h = frame1.length,
@@ -129,7 +129,7 @@ public class VideoEncoder
 	 * @return carte de compensation de mouvement des blocks entre la trame
 	 *         précédente reconstruite et la trame actuelle.
 	 */
-	/*package*/ static Vector2D[][] getBlockMovementMap(final int[][] prevFrameRec, final int[][] frame, final int blockW,
+	/*package*/ static Vector2D[][] computeBlockMovementMap(final int[][] prevFrameRec, final int[][] frame, final int blockW,
 			final int blockH)
 	{
 		final int nBlockH = frame.length    / blockH,
@@ -142,7 +142,7 @@ public class VideoEncoder
 		{
 			for (int bx = 0; bx < nBlockW; ++bx) 	// Indice position x.
 			{
-				movementMap[by][bx] = getBlockMovement(frame, prevFrameRec, bx*blockW, by*blockH, blockW, blockH);
+				movementMap[by][bx] = computeBlockMovement(frame, prevFrameRec, bx*blockW, by*blockH, blockW, blockH);
 			}
 		}
 		
@@ -150,8 +150,8 @@ public class VideoEncoder
 	}
 	
 	/**
-	 * Obtenir la matrice de coefficients de la DCT par bloc des erreurs de
-	 * prédiction spécifiées.
+	 * Obtenir la matrice de coefficients de la DCT par bloc quantifiée des
+	 * erreurs de prédiction spécifiées.
 	 * 
 	 * @param predError
 	 *            carte des erreurs de prédiction.
@@ -163,10 +163,10 @@ public class VideoEncoder
 	 *            échelle de quantification.
 	 * @param firstFrame
 	 *            true si cette trame est la première, ie: "Intra".
-	 * @return matrice de coefficients de la DCT par bloc des erreurs de
-	 *         prédiction spécifiées.
+	 * @return matrice de coefficients de la DCT par bloc quantifiée des erreurs
+	 *         de prédiction spécifiées.
 	 */
-	/*package*/ static double[][] getPredictionErrorCoeff(final int[][] predError, final int dctBlockSize,
+	/*package*/ static double[][] transformErrors(final int[][] predError, final int dctBlockSize,
 			final int[][] quantifWeights, final double quantifScale, final boolean firstFrame)
 	{
 		final int h = predError.length,
@@ -217,7 +217,7 @@ public class VideoEncoder
 	 * @return carte des erreurs de prédiction à partir de la matrice de
 	 *         coefficient DCT par bloc.
 	 */
-	/*package*/ static int[][] getPredictionErrorMap(final double[][] predErrorDCT, final int dctBlockSize)
+	/*package*/ static int[][] inverseTransformErrors(final double[][] predErrorDCT, final int dctBlockSize)
 	{
 		final int h = predErrorDCT.length,
 				  w = predErrorDCT[0].length;
@@ -255,13 +255,13 @@ public class VideoEncoder
 	 *            hauteur des blocs.
 	 * @return matrice des erreurs.
 	 */
-	/*package*/ static int[][] predict(final int[][] prevFrameRec, final int[][] frame, final Vector2D[][] blockMovementMap,
+	/*package*/ static int[][] computeErrors(final int[][] prevFrameRec, final int[][] frame, final Vector2D[][] blockMovementMap,
 			final int blockW, final int blockH)
 	{
 		final int h = frame.length,
 				  w = frame[0].length;
 		
-		final int[][] framePred = new int[h][w];
+		final int[][] frameErrors = new int[h][w];
 		for (int y = 0; y < h; ++y)
 		{
 			for (int x = 0; x < w; ++x)
@@ -269,10 +269,10 @@ public class VideoEncoder
 				// Vecteur de déplacement du bloc contenant le pixel (x, y).
 				final Vector2D blockMovement = blockMovementMap[y/blockH][x/blockW];
 				
-				framePred[y][x] = frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()];
+				frameErrors[y][x] = Math.max(-255, Math.min(frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()], 255));
 			}
 		}
-		return framePred;
+		return frameErrors;
 	}
 	
 	/**
@@ -305,7 +305,7 @@ public class VideoEncoder
 				// Vecteur de déplacement du bloc contenant le pixel (x, y).
 				final Vector2D blockMovement = blockMovementMap[y/blockH][x/blockW];
 				
-				frameRec[y][x] = prevFrameRec[y - blockMovement.y()][x - blockMovement.x()] + predError[y][x];
+				frameRec[y][x] = Math.max(-255, Math.min(prevFrameRec[y - blockMovement.y()][x - blockMovement.x()] + predError[y][x], 255));
 			}
 		}
 		return frameRec;

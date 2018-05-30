@@ -19,7 +19,7 @@ public class EncodedFrame
 	/**
 	 * Matrice des coefficients de la DCT des erreurs de prédiction.
 	 */
-	private final double[][] predictionErrorCoeffs;
+	private final double[][] transformedErrors;
 	/**
 	 * Vecteurs de déplacement des blocs utilisés pour la compensation de
 	 * mouvements.
@@ -30,47 +30,47 @@ public class EncodedFrame
 	 */
 	private final FrameType type;
 	
-	private EncodedFrame(final FrameType type, final double[][] predictionErrorCoeffs, final Vector2D[][] blockMovementMap)
+	private EncodedFrame(final FrameType type, final double[][] transformedErrors, final Vector2D[][] blockMovementMap)
 	{
 		this.type = type;
-		this.predictionErrorCoeffs = predictionErrorCoeffs;
+		this.transformedErrors = transformedErrors;
 		this.blockMovementMap =	blockMovementMap;
 	}
 	
 	/**
 	 * Obtenir une trame encodée intra.
 	 * 
-	 * @param imageDctCoeffs
+	 * @param transformedImage
 	 *            matrice des coefficients DCT de l'image intra.
 	 * @return trame encodée intra.
 	 */
-	public static EncodedFrame intraFrame(final double[][] imageDctCoeffs)
+	public static EncodedFrame intraFrame(final double[][] transformedImage)
 	{
-		return new EncodedFrame(FrameType.I, imageDctCoeffs, null);
+		return new EncodedFrame(FrameType.I, transformedImage, null);
 	}
 	
 	/**
 	 * Obtenir une trame encodée prédite.
 	 * 
-	 * @param predictionErrorCoeffs
+	 * @param transformedErrors
 	 *            matrice des coefficients de la DCT des erreurs de prédiction.
 	 * @param blockMovementMap
 	 *            Vecteurs de déplacement des blocs utilisés pour la
 	 *            compensation de mouvements.
 	 * @return trame encodée prédite.
 	 */
-	public static EncodedFrame predictedFrame(final double[][] predictionErrorCoeffs, final Vector2D[][] blockMovementMap)
+	public static EncodedFrame predictedFrame(final double[][] transformedErrors, final Vector2D[][] blockMovementMap)
 	{
-		return new EncodedFrame(FrameType.P, predictionErrorCoeffs, blockMovementMap);
+		return new EncodedFrame(FrameType.P, transformedErrors, blockMovementMap);
 	}
 	
 	/**
 	 * Obtenir la matrice des coefficients de la DCT des erreurs de prédiction.
 	 * @return matrice des coefficients de la DCT des erreurs de prédiction.
 	 */
-	public double[][] getPredictionErrorCoeffs()
+	public double[][] getTransformedErrors()
 	{
-		return predictionErrorCoeffs;
+		return transformedErrors;
 	}
 	
 	/**
