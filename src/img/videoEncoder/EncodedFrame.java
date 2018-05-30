@@ -1,4 +1,4 @@
-package img;
+package img.videoEncoder;
 
 import img.math.Vector2D;
 

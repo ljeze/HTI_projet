@@ -13,11 +13,12 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import gui.observable.Observable;
-import img.EncodedFrame;
-import img.EncodedFrame.FrameType;
 import img.Images;
-import img.VideoEncoder;
 import img.Videos;
+import img.videoEncoder.EncodedFrame;
+import img.videoEncoder.EncoderParams;
+import img.videoEncoder.VideoEncoder;
+import img.videoEncoder.EncodedFrame.FrameType;
 
 /**
  * Controlleur pour l'interface de test.
@@ -99,22 +100,24 @@ public class TestController
 					Stream<int[][]> inputSequence = Videos.readGray(sequencePathPrefix.get())
 														  .peek(origImg->codingResults.originalImg.set(Images.grayToJavaImg(origImg)));
 					
-					VideoEncoder.setMovementBlockSize(movementBlockSize.get());
-					VideoEncoder.setDctBlockSize(dctBlockSize.get());
+					final EncoderParams params = new EncoderParams()
+														.dctBlockSize(movementBlockSize.get())
+														.movementBlockSize(dctBlockSize.get());
 					
-					Stream<EncodedFrame> encodedSequence = VideoEncoder.encode(inputSequence)
+					Stream<EncodedFrame> encodedSequence = VideoEncoder.encode(inputSequence, params)
 																	   .peek(encodedImg->
 																	   {
 																		   if (encodedImg.getType() != FrameType.I)
 																		   {
 																			   codingResults.movementImg.set(
 																					   Images.vectorMapToJavaImg(encodedImg.getBlockMovementMap(), 
-																							   movementBlockSize.get(), movementBlockSize.get(),
+																							   params.getMovementBlockSize(), 
+																							   params.getMovementBlockSize(),
 																							   Color.BLACK, Color.WHITE, 1.5));
 																		   }
 																	   });
 					
-					VideoEncoder.decode(encodedSequence)
+					VideoEncoder.decode(encodedSequence, params)
 								.map(Images::grayToJavaImg)
 								.peek(reconstImg->codingResults.reconstImg.set(reconstImg))
 								.forEach(img->{});

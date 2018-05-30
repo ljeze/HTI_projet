@@ -8,14 +8,15 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import img.EncodedFrame;
 import img.Images;
-import img.VideoEncoder;
 import img.Videos;
 import img.math.Complex;
 import img.math.Matrices;
 import img.math.transforms.DCT;
 import img.math.transforms.FFT;
+import img.videoEncoder.EncodedFrame;
+import img.videoEncoder.EncoderParams;
+import img.videoEncoder.VideoEncoder;
 import test.plot.Plot;
 
 /**
@@ -199,9 +200,9 @@ public class Test
 				
 				return tmp;
 			})*/
-		);
+		, new EncoderParams());
 		
-		VideoEncoder.decode(encodedSequence)
+		VideoEncoder.decode(encodedSequence, new EncoderParams())
 					.map(Images::grayToJavaImg)
 					.forEach(Plot::showImg);
 	}
