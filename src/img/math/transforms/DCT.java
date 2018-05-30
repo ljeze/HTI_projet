@@ -1,6 +1,5 @@
 package img.math.transforms;
 
-import img.math.Complex;
 import img.math.Matrices;
 
 /**

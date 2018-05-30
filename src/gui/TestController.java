@@ -13,6 +13,7 @@ import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import gui.observable.Observable;
+import gui.observable.Observables;
 import img.Images;
 import img.Videos;
 import img.videoEncoder.EncodedFrame;
@@ -35,14 +36,9 @@ public class TestController
 	 */
 	private final Observable<Path> sequencePathPrefix;
 	/**
-	 * Taille des blocs pour la DCT.
+	 * Paramètres de l'encodage.
 	 */
-	private final Observable<Integer> dctBlockSize;
-	/**
-	 * Taille des blocs pour la compensation de mouvement.
-	 */
-	private final Observable<Integer> movementBlockSize;
-	
+	private final EncoderParams encoderParams;
 	/**
 	 * Résultats issus du codage.
 	 */
@@ -56,10 +52,9 @@ public class TestController
 	{
 		this.frame = frame;
 		
-		codingResults = new CodingResults();
+		encoderParams = new EncoderParams();
 		
-		dctBlockSize = new Observable<>(8);
-		movementBlockSize = new Observable<>(8);
+		codingResults = new CodingResults();
 		sequencePathPrefix = new Observable<>();
 	}
 	
@@ -100,24 +95,20 @@ public class TestController
 					Stream<int[][]> inputSequence = Videos.readGray(sequencePathPrefix.get())
 														  .peek(origImg->codingResults.originalImg.set(Images.grayToJavaImg(origImg)));
 					
-					final EncoderParams params = new EncoderParams()
-														.dctBlockSize(movementBlockSize.get())
-														.movementBlockSize(dctBlockSize.get());
-					
-					Stream<EncodedFrame> encodedSequence = VideoEncoder.encode(inputSequence, params)
+					Stream<EncodedFrame> encodedSequence = VideoEncoder.encode(inputSequence, encoderParams)
 																	   .peek(encodedImg->
 																	   {
 																		   if (encodedImg.getType() != FrameType.I)
 																		   {
 																			   codingResults.movementImg.set(
 																					   Images.vectorMapToJavaImg(encodedImg.getBlockMovementMap(), 
-																							   params.getMovementBlockSize(), 
-																							   params.getMovementBlockSize(),
+																							   encoderParams.getMovementBlockSize(), 
+																							   encoderParams.getMovementBlockSize(),
 																							   Color.BLACK, Color.WHITE, 1.5));
 																		   }
 																	   });
 					
-					VideoEncoder.decode(encodedSequence, params)
+					VideoEncoder.decode(encodedSequence, encoderParams)
 								.map(Images::grayToJavaImg)
 								.peek(reconstImg->codingResults.reconstImg.set(reconstImg))
 								.forEach(img->{});
@@ -179,18 +170,23 @@ public class TestController
 	 * Obtenir la taille des blocs pour la DCT.
 	 * @return Taille des blocs pour la DCT.
 	 */
-	public Observable<Integer> getDctBlockSize()
+	public Observable<Integer> dctBlockSizeProperty()
 	{
-		return dctBlockSize;
+		return Observables.observable(encoderParams::getDctBlockSize, encoderParams::dctBlockSize);
 	}
 	
 	/**
 	 * Obtenir la taille des blocs pour la compensation de mouvement.
 	 * @return Taille des blocs pour la compensation de mouvement.
 	 */
-	public Observable<Integer> getMovementBlockSize()
+	public Observable<Integer> movementBlockSizeProperty()
 	{
-		return movementBlockSize;
+		return Observables.observable(encoderParams::getMovementBlockSize, encoderParams::movementBlockSize);
+	}
+	
+	public Observable<Integer> quantifScaleProperty()
+	{
+		return Observables.observable(encoderParams::getQuantificationScale, encoderParams::quantifierScale);
 	}
 	
 	/**

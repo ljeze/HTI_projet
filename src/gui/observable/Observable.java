@@ -42,7 +42,7 @@ public class Observable<T>
 	 */
 	public void set(final T value)
 	{
-		this.value = value;
+		setWithoutNotify(value);
 		notifyChange();
 	}
 	

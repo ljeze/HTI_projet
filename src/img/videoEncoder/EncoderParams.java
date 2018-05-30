@@ -29,6 +29,10 @@ public class EncoderParams
 	 * Taille des blocs utilisés pour la DCT en bloc.
 	 */
 	private int dctBlockSize = 8;
+	/**
+	 * Echelle de quantification.
+	 */
+	private int quantifScale = 3;
 	
 	/**
 	 * Définir la taille des blocks dct. Fonction temporaire, à faire : mettre
@@ -36,6 +40,7 @@ public class EncoderParams
 	 * encodedFrame.
 	 * 
 	 * @param dctBlockSize
+	 * @return paramètres de l'encodeur.
 	 */
 	public EncoderParams dctBlockSize(final int dctBlockSize)
 	{
@@ -49,10 +54,24 @@ public class EncoderParams
 	 * attribut encodingInfo à encodedFrame.
 	 * 
 	 * @param movementBlockSize
+	 * @return paramètres de l'encodeur.
 	 */
 	public EncoderParams movementBlockSize(final int movementBlockSize)
 	{
 		this.movementBlockSize = movementBlockSize;
+		return this;
+	}
+	
+	/**
+	 * Définir l'échelle de quantification.
+	 * 
+	 * @param quantifScale
+	 *            échelle de quantification.
+	 * @return paramètres de l'encodeur.
+	 */
+	public EncoderParams quantifierScale(final int quantifScale)
+	{
+		this.quantifScale = quantifScale;
 		return this;
 	}
 	
@@ -72,6 +91,15 @@ public class EncoderParams
 	public int getDctBlockSize()
 	{
 		return dctBlockSize;
+	}
+	
+	/**
+	 * Obtenir l'échelle de quantification.
+	 * @return échelle de quantification.
+	 */
+	public int getQuantificationScale()
+	{
+		return quantifScale;
 	}
 	
 	/**

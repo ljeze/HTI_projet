@@ -20,7 +20,6 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import gui.observable.Observables;
 
@@ -120,7 +119,8 @@ public class TestFrame extends JFrame
 		 };
 		
 		final JTextField dctSizeField 	   = new JTextField(),
-						 movementSizeField = new JTextField();
+						 movementSizeField = new JTextField(),
+						 quantifScaleField = new JTextField();
 		
 		parameterPanel.setLayout(new BoxLayout(parameterPanel, BoxLayout.Y_AXIS));
 		parameterPanel.setVisible(false);
@@ -129,12 +129,14 @@ public class TestFrame extends JFrame
 		parameterPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20),
 																	BorderFactory.createTitledBorder("Paramètres de l'encodage")));
 		
-		Observables.bind(movementSizeField, controller.getMovementBlockSize(), Integer::parseInt);
-		Observables.bind(dctSizeField, controller.getDctBlockSize(), Integer::parseInt);
+		Observables.bind(movementSizeField, controller.movementBlockSizeProperty(), Integer::parseInt);
+		Observables.bind(dctSizeField, controller.dctBlockSizeProperty(), Integer::parseInt);
+		Observables.bind(quantifScaleField, controller.quantifScaleProperty(), Integer::parseInt);
 		
 		final JComponent[][] formComponents = {
 			{new JLabel("Taille des blocs prédiction de mouvement"), movementSizeField},
 			{new JLabel("Taille des blocs DCT"), dctSizeField},
+			{new JLabel("Echelle de quantification"), quantifScaleField},
 		};
 		
 		populateForm(formPanel, new Insets(5, 5, 5, 5), formComponents);

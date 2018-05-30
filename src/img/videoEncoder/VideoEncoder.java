@@ -1,12 +1,10 @@
 package img.videoEncoder;
 
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import img.math.Matrices;
 import img.math.Vector2D;
 import img.math.transforms.DCT;
-import img.videoEncoder.EncodedFrame.FrameType;
 
 /**
  * Encodeur / decodeur d'une séquence d'images.
@@ -25,7 +23,7 @@ public class VideoEncoder
 	 */
 	public static Stream<EncodedFrame> encode(final Stream<int[][]> frameStream, final EncoderParams parameters)
 	{
-		return frameStream.map(new Encoder(parameters));
+		return frameStream.map(new VideoEncodingPipeline(parameters));
 	}
 	
 	/**
@@ -37,7 +35,7 @@ public class VideoEncoder
 	 */
 	public static Stream<int[][]> decode(final Stream<EncodedFrame> frameStream, final EncoderParams parameters)
 	{
-		return frameStream.map(new Decoder(parameters));
+		return frameStream.map(new VideoDecodingPipeline(parameters));
 	}
 	
 	//==========================================================================
@@ -63,7 +61,7 @@ public class VideoEncoder
 	 * @return vecteur de déplacement optimal dans le bloc spécifié entre deux
 	 *         trames.
 	 */
-	private static Vector2D getBlockMovement(final int[][] frame1, final int[][] frame2, final int bx, final int by,
+	/*package*/  static Vector2D getBlockMovement(final int[][] frame1, final int[][] frame2, final int bx, final int by,
 			final int blockW, final int blockH)
 	{
 		final int h = frame1.length,
@@ -131,7 +129,7 @@ public class VideoEncoder
 	 * @return carte de compensation de mouvement des blocks entre la trame
 	 *         précédente reconstruite et la trame actuelle.
 	 */
-	private static Vector2D[][] getBlockMovementMap(final int[][] prevFrameRec, final int[][] frame, final int blockW,
+	/*package*/ static Vector2D[][] getBlockMovementMap(final int[][] prevFrameRec, final int[][] frame, final int blockW,
 			final int blockH)
 	{
 		final int nBlockH = frame.length    / blockH,
@@ -161,21 +159,20 @@ public class VideoEncoder
 	 *            taille des blocs DCT.
 	 * @param quantifWeights
 	 *            matrice des poids de quantification pour un bloc de la dct.
+	 * @param quantifScale
+	 *            échelle de quantification.
 	 * @param firstFrame
 	 *            true si cette trame est la première, ie: "Intra".
 	 * @return matrice de coefficients de la DCT par bloc des erreurs de
 	 *         prédiction spécifiées.
 	 */
-	private static double[][] getPredictionErrorCoeff(final int[][] predError, final int dctBlockSize,
-			final int[][] quantifWeights, final boolean firstFrame)
+	/*package*/ static double[][] getPredictionErrorCoeff(final int[][] predError, final int dctBlockSize,
+			final int[][] quantifWeights, final double quantifScale, final boolean firstFrame)
 	{
 		final int h = predError.length,
 				  w = predError[0].length;
 		
 		double[][] predErrorCoeffs = DCT.blockTransform(Matrices.toDouble(predError), dctBlockSize, dctBlockSize);
-		
-		// Taille / échelle du quantificateur.
-		final double quantifScale = 1;
 		
 		// Quantification coefficients.
 
@@ -187,8 +184,8 @@ public class VideoEncoder
 			{
 				for (int x = 0; x < w; x++)
 				{
-					predErrorCoeffs[y][x] = ((predErrorCoeffs[y][x]*16.0)/quantifWeights[y%dctBlockSize][x%dctBlockSize]) / 
-											(2.0*quantifScale);
+					/*predErrorCoeffs[y][x] = ((predErrorCoeffs[y][x]*16.0)/quantifWeights[y%dctBlockSize][x%dctBlockSize]) / 
+											(2.0*quantifScale);*/
 				}
 			}
 		}
@@ -220,7 +217,7 @@ public class VideoEncoder
 	 * @return carte des erreurs de prédiction à partir de la matrice de
 	 *         coefficient DCT par bloc.
 	 */
-	private static int[][] getPredictionErrorMap(final double[][] predErrorDCT, final int dctBlockSize)
+	/*package*/ static int[][] getPredictionErrorMap(final double[][] predErrorDCT, final int dctBlockSize)
 	{
 		final int h = predErrorDCT.length,
 				  w = predErrorDCT[0].length;
@@ -258,7 +255,7 @@ public class VideoEncoder
 	 *            hauteur des blocs.
 	 * @return matrice des erreurs.
 	 */
-	private static int[][] predict(final int[][] prevFrameRec, final int[][] frame, final Vector2D[][] blockMovementMap,
+	/*package*/ static int[][] predict(final int[][] prevFrameRec, final int[][] frame, final Vector2D[][] blockMovementMap,
 			final int blockW, final int blockH)
 	{
 		final int h = frame.length,
@@ -294,7 +291,7 @@ public class VideoEncoder
 	 *            hauteur des blocs.
 	 * @return trame reconstruite.
 	 */
-	private static int[][] reconstruct(final int[][] prevFrameRec, final int[][] predError,
+	/*package*/ static int[][] reconstruct(final int[][] prevFrameRec, final int[][] predError,
 			final Vector2D[][] blockMovementMap, final int blockW, final int blockH)
 	{
 		final int h = prevFrameRec.length,
@@ -312,107 +309,5 @@ public class VideoEncoder
 			}
 		}
 		return frameRec;
-	}
-	
-	/**
-	 * Encodeur de trame avec compensation de mouvement.
-	 */
-	private static class Encoder implements Function<int[][], EncodedFrame>
-	{
-		/**
-		 * Paramètres d'encodage.
-		 */
-		private final EncoderParams parameters;
-		/**
-		 * Trame précédente reconstruite.
-		 */
-		private int[][] prevFrameRec;
-		
-		public Encoder(final EncoderParams parameters)
-		{
-			this.parameters = parameters;
-		}
-		
-		/**
-		 * Encode une trame.
-		 * 
-		 * @param frame
-		 *            trame actuelle initiale (non reconstruite).
-		 * @return trame encodée.
-		 */
-		@Override
-		public EncodedFrame apply(final int[][] frame)
-		{
-			// Si l'on est sur la première trame.
-			if (prevFrameRec == null)
-			{
-				// On calcul les coefficients DCT de ces erreurs (l'image) et on applique la quantification.
-				double[][] predErrorCoeff = getPredictionErrorCoeff(frame, parameters.getDctBlockSize(), parameters.getQuantificationWeights(), true);
-				prevFrameRec = getPredictionErrorMap(predErrorCoeff, parameters.getDctBlockSize());
-				// L'envoyer sans prédiction.
-				return EncodedFrame.intraFrame(predErrorCoeff);
-			}
-			
-			// On calcul la carte de compensation de mouvement des blocs.
-			Vector2D[][] blockMovementMap = getBlockMovementMap(prevFrameRec, frame, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
-			
-			// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
-			int[][] predError = predict(prevFrameRec, frame, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
-			
-			// On calcul les coefficients DCT de ces erreurs et on applique la quantification.
-			double[][] predErrorCoeff = getPredictionErrorCoeff(predError, parameters.getDctBlockSize(), parameters.getQuantificationWeights(), false);
-			
-			// On calcul la trame actuelle reconstruite.
-			int[][] frameRec = reconstruct(prevFrameRec, getPredictionErrorMap(predErrorCoeff, parameters.getDctBlockSize()), blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
-			
-			prevFrameRec = frameRec;
-			return EncodedFrame.predictedFrame(predErrorCoeff, blockMovementMap);
-		}
-	}
-	
-	/**
-	 * Décodeur de trames avec compensation de mouvement.
-	 */
-	private static class Decoder implements Function<EncodedFrame, int[][]>
-	{
-		/**
-		 * Paramètres d'encodage.
-		 */
-		private final EncoderParams parameters;
-		/**
-		 * Trame précédente reconstruite.
-		 */
-		private int[][] prevFrameRec;
-		
-		public Decoder(final EncoderParams parameters)
-		{
-			this.parameters = parameters;
-		}
-		
-		/**
-		 * Décode une trame.
-		 * 
-		 * @param frame
-		 *            trame encodée.
-		 * @return trame décodée.
-		 */
-		@Override
-		public int[][] apply(final EncodedFrame frame)
-		{
-			// Trame Intra.
-			if (frame.getType() == FrameType.I)
-			{
-				prevFrameRec = getPredictionErrorMap(frame.getPredictionErrorCoeffs(), parameters.getDctBlockSize());
-				return prevFrameRec;
-			}
-			
-			// La trame est une matrice d'erreurs de prédiction.
-			int[][] predError = getPredictionErrorMap(frame.getPredictionErrorCoeffs(), parameters.getDctBlockSize());
-			// On calcul la trame actuelle reconstruite.
-			int[][] frameRec = reconstruct(prevFrameRec, predError, frame.getBlockMovementMap(), parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
-			
-			prevFrameRec = frameRec;
-			return frameRec;
-		}
 	}
 }

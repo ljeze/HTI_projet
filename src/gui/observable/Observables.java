@@ -1,6 +1,8 @@
 package gui.observable;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -28,6 +30,31 @@ public class Observables
 	}
 	
 	/**
+	 * Obtenir une entitée observable à partir d'un setter et d'un getter.
+	 * 
+	 * @param getter
+	 * @param setter
+	 * @return entitée observable.
+	 */
+	public static <T> Observable<T> observable(final Supplier<T> getter, final Consumer<T> setter)
+	{
+		return new Observable<T>()
+		{
+			@Override
+			public T get()
+			{
+				return getter.get();
+			}
+			
+			@Override
+			public void setWithoutNotify(final T value)
+			{
+				setter.accept(value);
+			}
+		};
+	}
+	
+	/**
 	 * Assure une correspondance entre le contenu du composant textComposant et
 	 * l'observable obs. La convertion entre les deux est assuré par la fonction
 	 * conversionFunction.
@@ -44,7 +71,17 @@ public class Observables
 		textComponent.setText(obs.get() == null ? "" : obs.get().toString());
 		
 		// Observateur du texte du composant.
-		final SimpleDocumentListener docListener = e->obs.setWithoutNotify(conversionFunction.apply(textComponent.getText()));
+		final SimpleDocumentListener docListener = e->
+		{
+			try
+			{
+				obs.setWithoutNotify(conversionFunction.apply(textComponent.getText()));
+			}
+			catch (Exception ex)
+			{
+				
+			}
+		};
 		
 		// textComponent <= obs.
 		obs.addListener(val->
