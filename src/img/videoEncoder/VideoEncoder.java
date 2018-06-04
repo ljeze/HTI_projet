@@ -61,7 +61,7 @@ public class VideoEncoder
 	 * @return vecteur de déplacement optimal dans le bloc spécifié entre deux
 	 *         trames.
 	 */
-	/*package*/  static Vector2D computeBlockMovement(final int[][] frame1, final int[][] frame2, final int bx, final int by,
+	private static Vector2D computeBlockMovement(final int[][] frame1, final int[][] frame2, final int bx, final int by,
 			final int blockW, final int blockH)
 	{
 		final int h = frame1.length,
@@ -153,7 +153,7 @@ public class VideoEncoder
 	 * Obtenir la matrice de coefficients de la DCT par bloc quantifiée des
 	 * erreurs de prédiction spécifiées.
 	 * 
-	 * @param predError
+	 * @param errors
 	 *            carte des erreurs de prédiction.
 	 * @param dctBlockSize
 	 *            taille des blocs DCT.
@@ -166,13 +166,13 @@ public class VideoEncoder
 	 * @return matrice de coefficients de la DCT par bloc quantifiée des erreurs
 	 *         de prédiction spécifiées.
 	 */
-	/*package*/ static double[][] transformErrors(final int[][] predError, final int dctBlockSize,
+	/*package*/ static double[][] transformErrors(final int[][] errors, final int dctBlockSize,
 			final int[][] quantifWeights, final double quantifScale, final boolean firstFrame)
 	{
-		final int h = predError.length,
-				  w = predError[0].length;
+		final int h = errors.length,
+				  w = errors[0].length;
 		
-		double[][] predErrorCoeffs = DCT.blockTransform(Matrices.toDouble(predError), dctBlockSize, dctBlockSize);
+		double[][] transformedErrors = DCT.blockTransform(Matrices.toDouble(errors), dctBlockSize, dctBlockSize);
 		
 		// Quantification coefficients.
 
@@ -195,21 +195,21 @@ public class VideoEncoder
 			{
 				for (int x = 0; x < w; ++x)
 				{
-					predErrorCoeffs[y][x] = 
-							(predErrorCoeffs[y][x]*16.0/quantifWeights[y%dctBlockSize][x%dctBlockSize] - 
-												Math.signum(predErrorCoeffs[y][x])*quantifScale) / 
+					transformedErrors[y][x] = 
+							(transformedErrors[y][x]*16.0/quantifWeights[y%dctBlockSize][x%dctBlockSize] - 
+												Math.signum(transformedErrors[y][x])*quantifScale) / 
 											(2*quantifScale);
 				}
 			}
 		}
-		return predErrorCoeffs;
+		return transformedErrors;
 	}
 	
 	/**
 	 * Obtenir la carte des erreurs de prédiction <b>quantifiée</b> à partir de
 	 * la matrice de coefficient DCT par bloc.
 	 * 
-	 * @param predError
+	 * @param transformedErrors
 	 *            matrice des coefficents de la DCT par bloc des erreurs de
 	 *            prédiction.
 	 * @param dctBlockSize
@@ -217,12 +217,12 @@ public class VideoEncoder
 	 * @return carte des erreurs de prédiction à partir de la matrice de
 	 *         coefficient DCT par bloc.
 	 */
-	/*package*/ static int[][] inverseTransformErrors(final double[][] predErrorDCT, final int dctBlockSize)
+	public static int[][] inverseTransformErrors(final double[][] transformedErrors, final int dctBlockSize)
 	{
-		final int h = predErrorDCT.length,
-				  w = predErrorDCT[0].length;
+		final int h = transformedErrors.length,
+				  w = transformedErrors[0].length;
 		
-		final double[][] predErrorDouble = DCT.inverseBlockTransform(predErrorDCT, dctBlockSize, dctBlockSize);
+		final double[][] predErrorDouble = DCT.inverseBlockTransform(transformedErrors, dctBlockSize, dctBlockSize);
 		final int[][] predError = new int[h][w];
 		
 		for (int y = 0; y < h; ++y)
@@ -236,9 +236,6 @@ public class VideoEncoder
 		return predError;
 	}
 	
-	//===================================================================================================
-	// Prédicteurs avec compensation de mouvement.
-	//===================================================================================================
 	/**
 	 * Prédire une trame à partir de la précédente, avec compensation de
 	 * mouvement.

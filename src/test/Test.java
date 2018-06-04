@@ -1,5 +1,6 @@
 package test;
 
+import java.awt.Color;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -235,9 +236,9 @@ public class Test
 		
 		try
 		{
-			//testImageRead();
+			testImageRead();
 			//testBlockDCT2D();
-			testVideoEncoding();
+			//testVideoEncoding();
 		} catch (FileNotFoundException e)
 		{
 			e.printStackTrace();

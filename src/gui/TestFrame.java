@@ -155,14 +155,14 @@ public class TestFrame extends JFrame
 		final JLabel originalImg = new JLabel("", JLabel.CENTER),	// Image originale.
 					 movementImg = new JLabel("", JLabel.CENTER),	// Carte des vecteurs de mouvement.
 					 reconstImg  = new JLabel("", JLabel.CENTER),	// Image reconstruite.
-					 errorImg    = new JLabel("", JLabel.CENTER);	// Carte des erreurs.
+					 errorsImg   = new JLabel("", JLabel.CENTER);	// Carte des erreurs.
 		
 		viewPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 		
 		originalImg.setBorder(BorderFactory.createTitledBorder("Trame originale"));
 		movementImg.setBorder(BorderFactory.createTitledBorder("Vecteurs de mouvement"));
 		reconstImg .setBorder(BorderFactory.createTitledBorder("Image reconstruite."));
-		errorImg   .setBorder(BorderFactory.createTitledBorder("Erreurs de prédiction"));
+		errorsImg  .setBorder(BorderFactory.createTitledBorder("Erreurs de prédiction"));
 		
 		// Coordonne les résultats et les labels d'image.
 		controller.getCodingResults().originalImg.addListener(img->
@@ -174,13 +174,13 @@ public class TestFrame extends JFrame
 		controller.getCodingResults().reconstImg.addListener(img->
 			SwingUtilities.invokeLater(()->reconstImg.setIcon(new ImageIcon(img))));
 		
-		controller.getCodingResults().errorImg.addListener(img->
-			SwingUtilities.invokeLater(()->errorImg.setIcon(new ImageIcon(img))));
+		controller.getCodingResults().errorsImg.addListener(img->
+			SwingUtilities.invokeLater(()->errorsImg.setIcon(new ImageIcon(img))));
 		
 		viewPanel.add(originalImg);
 		viewPanel.add(movementImg);
 		viewPanel.add(reconstImg);
-		viewPanel.add(errorImg);
+		viewPanel.add(errorsImg);
 		
 		return viewPanel;
 	}

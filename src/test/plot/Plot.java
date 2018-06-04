@@ -1,5 +1,7 @@
 package test.plot;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 import javax.swing.ImageIcon;
@@ -24,6 +26,14 @@ public class Plot
 		JFrame frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
+		/*BufferedImage tmp = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_3BYTE_BGR);
+		tmp.setRGB(0, 0, tmp.getWidth(), tmp.getHeight(), img.getRGB(0, 0, tmp.getWidth(), tmp.getHeight(), null, 0, tmp.getWidth()), 0, tmp.getWidth());*/
+		/*Graphics2D g = tmp.createGraphics();
+		
+		g.drawImage(img, 0, 0, null);
+		g.fillRect(0, 0, 50, 50);
+		g.dispose();
+		*/
 		JLabel imgLbl = new JLabel(new ImageIcon(img));
 		frame.add(imgLbl);
 		

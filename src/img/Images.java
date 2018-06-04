@@ -2,9 +2,7 @@ package img;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorConvertOp;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -31,7 +29,7 @@ public class Images
 		final int w = img[0].length,
 				  h = img.length;
 		
-		final BufferedImage javaImg = new BufferedImage(w, h, BufferedImage.TYPE_BYTE_GRAY);
+		final BufferedImage javaImg = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
 		
 		// Convertir le niveau de gris en entier rgb.
 		for (int y = 0; y < h; ++y)
@@ -44,6 +42,9 @@ public class Images
 			}
 		}
 		
+		/*final BufferedImage ret = new BufferedImage(w, h, BufferedImage.TYPE_3BYTE_BGR);
+		ret.setRGB(0, 0, w, h, javaImg.getRGB(0, 0, w, h, null, 0, w), 0, w);
+		*/
 		return javaImg;
 	}
 
@@ -179,12 +180,11 @@ public class Images
 			final BufferedImage img = ImageIO.read(filePath.toFile());
 			final int w = img.getWidth(),
 					  h = img.getHeight();
-			
-			BufferedImage grayImg = new BufferedImage(w, h, BufferedImage.TYPE_BYTE_GRAY);
+			/*BufferedImage grayImg = new BufferedImage(w, h, BufferedImage.TYPE_BYTE_GRAY);
 			
 			ColorSpace gray = ColorSpace.getInstance(ColorSpace.CS_GRAY);
 			ColorConvertOp colorConvert = new ColorConvertOp(gray, null);
-			colorConvert.filter(img, grayImg);
+			colorConvert.filter(img, grayImg);*/
 			
 			final int[][] grayscaleArray = new int[h][w];
 			

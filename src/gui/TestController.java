@@ -16,6 +16,7 @@ import gui.observable.Observable;
 import gui.observable.Observables;
 import img.Images;
 import img.Videos;
+import img.math.Matrices;
 import img.videoEncoder.EncodedFrame;
 import img.videoEncoder.EncoderParams;
 import img.videoEncoder.VideoEncoder;
@@ -105,6 +106,14 @@ public class TestController
 																							   encoderParams.getMovementBlockSize(), 
 																							   encoderParams.getMovementBlockSize(),
 																							   Color.BLACK, Color.WHITE, 1.5));
+																			   
+																			   codingResults.errorsImg.set(Images.grayToJavaImg(
+																					   Matrices.map(VideoEncoder.inverseTransformErrors(
+																							   				encodedImg.getTransformedErrors(),
+																							   				encoderParams.getDctBlockSize()
+																							   			   ), -255, 255, 0, 255)
+																							   			   
+																			   ));
 																		   }
 																	   });
 					

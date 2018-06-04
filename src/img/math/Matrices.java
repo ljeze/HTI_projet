@@ -169,4 +169,41 @@ public class Matrices
 		
 		return entropy;
 	}
+	
+	/**
+	 * Mapper les valeurs d'une matrice entre matrixMin et matrixMax vers des
+	 * valeurs entre targetMin et targetMax.
+	 * 
+	 * @param matrix
+	 *            matrice à mapper.
+	 * @param matrixMin
+	 *            minimum de cette matrice.
+	 * @param matrixMax
+	 *            maximum de cette matrice.
+	 * @param targetMin
+	 *            minimum à atteindre.
+	 * @param targetMax
+	 *            maximum à atteindre.
+	 * @return matrice de valeurs entre targetMin et targetMax.
+	 */
+	public static int[][] map(final int[][] matrix, final int matrixMin, final int matrixMax, final int targetMin, final int targetMax)
+	{
+		final int h = matrix.length,
+				  w = matrix[0].length;
+		
+		final int[][] mappedMatrix = new int[h][w];
+		
+		final int minGap = targetMin - matrixMin;
+		final double scaleFactor = (double) targetMax / (minGap + matrixMax);
+		
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				mappedMatrix[y][x] = (int) ((matrix[y][x] + minGap) * scaleFactor);
+			}
+		}
+		
+		return mappedMatrix;
+	}
 }
