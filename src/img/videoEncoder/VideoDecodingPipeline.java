@@ -1,9 +1,13 @@
 package img.videoEncoder;
 
+import static img.videoEncoder.VideoEncoder.inverseTransformBlockMovementMap;
+import static img.videoEncoder.VideoEncoder.inverseTransformErrors;
+import static img.videoEncoder.VideoEncoder.reconstruct;
+
 import java.util.function.Function;
 
+import img.math.Vector2D;
 import img.videoEncoder.EncodedFrame.FrameType;
-import static img.videoEncoder.VideoEncoder.*;
 
 /**
  * Pipeline de décodage vidéo.
@@ -43,8 +47,11 @@ public class VideoDecodingPipeline implements Function<EncodedFrame, int[][]>
 		
 		// La trame est une matrice d'erreurs de prédiction.
 		int[][] errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
+		// La carte de compensation de mouvement.
+		Vector2D[][] blockMovementMap = inverseTransformBlockMovementMap(frame.getTransformedBlockMovementMap());
+		
 		// On calcul la trame actuelle reconstruite.
-		int[][] frameRec = reconstruct(prevFrameRec, errors, frame.getBlockMovementMap(), parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		int[][] frameRec = reconstruct(prevFrameRec, errors, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;
 		return frameRec;

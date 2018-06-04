@@ -17,24 +17,24 @@ public class EncodedFrame
 	};
 	
 	/**
-	 * Matrice des coefficients de la DCT des erreurs de prédiction.
+	 * Matrice des coefficients de la DCT des erreurs de prédiction encodée.
 	 */
 	private final double[][] transformedErrors;
 	/**
 	 * Vecteurs de déplacement des blocs utilisés pour la compensation de
-	 * mouvements.
+	 * mouvements encodés.
 	 */
-	private final Vector2D[][] blockMovementMap;
+	private final Vector2D[][] transformedBlockMovementMap;
 	/**
 	 * Type de trame.
 	 */
 	private final FrameType type;
 	
-	private EncodedFrame(final FrameType type, final double[][] transformedErrors, final Vector2D[][] blockMovementMap)
+	private EncodedFrame(final FrameType type, final double[][] transformedErrors, final Vector2D[][] transformedBlockMovementMap)
 	{
 		this.type = type;
 		this.transformedErrors = transformedErrors;
-		this.blockMovementMap =	blockMovementMap;
+		this.transformedBlockMovementMap = transformedBlockMovementMap;
 	}
 	
 	/**
@@ -54,19 +54,19 @@ public class EncodedFrame
 	 * 
 	 * @param transformedErrors
 	 *            matrice des coefficients de la DCT des erreurs de prédiction.
-	 * @param blockMovementMap
+	 * @param transformedBlockMovementMap
 	 *            Vecteurs de déplacement des blocs utilisés pour la
 	 *            compensation de mouvements.
 	 * @return trame encodée prédite.
 	 */
-	public static EncodedFrame predictedFrame(final double[][] transformedErrors, final Vector2D[][] blockMovementMap)
+	public static EncodedFrame predictedFrame(final double[][] transformedErrors, final Vector2D[][] transformedBlockMovementMap)
 	{
-		return new EncodedFrame(FrameType.P, transformedErrors, blockMovementMap);
+		return new EncodedFrame(FrameType.P, transformedErrors, transformedBlockMovementMap);
 	}
 	
 	/**
 	 * Obtenir la matrice des coefficients de la DCT des erreurs de prédiction.
-	 * @return matrice des coefficients de la DCT des erreurs de prédiction.
+	 * @return matrice des coefficients de la DCT des erreurs de prédiction transformée.
 	 */
 	public double[][] getTransformedErrors()
 	{
@@ -75,11 +75,11 @@ public class EncodedFrame
 	
 	/**
 	 * Obtenir la carte de compensation de mouvement des blocs.
-	 * @return carte de compensation de mouvement des blocs.
+	 * @return carte de compensation de mouvement des blocs transformée.
 	 */
-	public Vector2D[][] getBlockMovementMap()
+	public Vector2D[][] getTransformedBlockMovementMap()
 	{
-		return blockMovementMap;
+		return transformedBlockMovementMap;
 	}
 	
 	/**

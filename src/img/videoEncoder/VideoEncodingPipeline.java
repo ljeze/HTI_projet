@@ -43,7 +43,6 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 		 */
 		final double[][] transformedErrors;
 		
-		
 		// Si l'on est sur la première trame.
 		if (prevFrameRec == null)
 		{
@@ -61,20 +60,25 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 			return EncodedFrame.intraFrame(transformedErrors);
 		}
 		
-		// On calcul la carte de compensation de mouvement des blocs.
-		Vector2D[][] blockMovementMap = computeBlockMovementMap(prevFrameRec, frame, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		final Vector2D[][] transformedBlockMovementMap;
 		
+		// On calcul la carte de compensation de mouvement des blocs.
+		final Vector2D[][] blockMovementMap = computeBlockMovementMap(prevFrameRec, frame, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
 		errors = computeErrors(prevFrameRec, frame, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
-		// On calcul les coefficients DCT de ces erreurs et on applique la quantification.
+		// On calcul la carte de compensation de mouvement transformée.
+		transformedBlockMovementMap = transformBlockMovementMap(blockMovementMap);
+		// On calcul les coefficients DCT de ces erreurs et on applique la quantification puis prédiction DPCM.
 		transformedErrors = transformErrors(errors, parameters.getDctBlockSize(),
 				parameters.getQuantificationWeights(), parameters.getQuantificationScale(), false);
 		
 		// On calcul la trame actuelle reconstruite.
-		int[][] frameRec = reconstruct(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()), blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		int[][] frameRec = reconstruct(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()), 
+													 inverseTransformBlockMovementMap(transformedBlockMovementMap), 
+									   parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;
-		return EncodedFrame.predictedFrame(transformedErrors, blockMovementMap);
+		return EncodedFrame.predictedFrame(transformedErrors, transformedBlockMovementMap);
 	}
 }

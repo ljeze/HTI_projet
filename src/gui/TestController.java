@@ -93,33 +93,17 @@ public class TestController
 			{
 				try
 				{
+					// Flux de trames originales.
 					Stream<int[][]> inputSequence = Videos.readGray(sequencePathPrefix.get())
-														  .peek(origImg->codingResults.originalImg.set(Images.grayToJavaImg(origImg)));
+														  .peek(this::handleNewFrame);
 					
+					// Flux de trames encodées.
 					Stream<EncodedFrame> encodedSequence = VideoEncoder.encode(inputSequence, encoderParams)
-																	   .peek(encodedImg->
-																	   {
-																		   if (encodedImg.getType() != FrameType.I)
-																		   {
-																			   codingResults.movementImg.set(
-																					   Images.vectorMapToJavaImg(encodedImg.getBlockMovementMap(), 
-																							   encoderParams.getMovementBlockSize(), 
-																							   encoderParams.getMovementBlockSize(),
-																							   Color.BLACK, Color.WHITE, 1.5));
-																			   
-																			   codingResults.errorsImg.set(Images.grayToJavaImg(
-																					   Matrices.map(VideoEncoder.inverseTransformErrors(
-																							   				encodedImg.getTransformedErrors(),
-																							   				encoderParams.getDctBlockSize()
-																							   			   ), -255, 255, 0, 255)
-																							   			   
-																			   ));
-																		   }
-																	   });
+																	   .peek(this::handleNewEncodedFrame);
 					
+					// Flux de trames décodées.
 					VideoEncoder.decode(encodedSequence, encoderParams)
-								.map(Images::grayToJavaImg)
-								.peek(reconstImg->codingResults.reconstImg.set(reconstImg))
+								.peek(this::handleNewReconstructedFrame)
 								.forEach(img->{});
 				}
 				catch (FileNotFoundException e)
@@ -130,6 +114,49 @@ public class TestController
 			
 			encodingThread.start();
 		}
+	}
+	
+	/**
+	 * Une nouvelle trame originale est arrivée.
+	 * 
+	 * @param frame
+	 *            trame originale.
+	 */
+	private void handleNewFrame(final int[][] frame)
+	{
+		codingResults.originalImg.set(Images.grayToJavaImg(frame));
+	}
+	
+	/**
+	 * Une nouvelle trame encodée est arrivée.
+	 * 
+	 * @param encodedFrame
+	 *            trame encodée.
+	 */
+	private void handleNewEncodedFrame(final EncodedFrame encodedFrame)
+	{
+		if (encodedFrame.getType() != FrameType.I)
+		{
+			codingResults.movementImg.set(
+					Images.vectorMapToJavaImg(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()), encoderParams.getMovementBlockSize(),
+							encoderParams.getMovementBlockSize(), Color.BLACK, Color.WHITE, 1.5));
+			
+			codingResults.errorsImg.set(Images
+					.grayToJavaImg(Matrices.map(VideoEncoder.inverseTransformErrors(encodedFrame.getTransformedErrors(),
+							encoderParams.getDctBlockSize()), -255, 255, 0, 255)
+			));
+		}
+	}
+	
+	/**
+	 * Une nouvelle trame reconstruite est arrivée.
+	 * 
+	 * @param reconstructedFrame
+	 *            trame reconstruite.
+	 */
+	private void handleNewReconstructedFrame(final int[][] reconstructedFrame)
+	{
+		codingResults.reconstImg.set(Images.grayToJavaImg(reconstructedFrame));
 	}
 	
 	// ======================================================================================

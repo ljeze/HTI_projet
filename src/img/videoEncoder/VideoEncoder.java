@@ -1,13 +1,16 @@
 package img.videoEncoder;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import img.math.Matrices;
 import img.math.Vector2D;
 import img.math.transforms.DCT;
+import img.prediction.DPCM;
 
 /**
- * Encodeur / decodeur d'une séquence d'images.
+ * Possède toutes les fonctions d'encodage / décodage utilisées dans le pipeline
+ * de l'encodeur vidéo.
  */
 public class VideoEncoder
 {
@@ -41,6 +44,35 @@ public class VideoEncoder
 	//==========================================================================
 	// Fonctions intermédiaires utiles pour l'encodage / décodage.
 	//==========================================================================
+	
+	/**
+	 * Transformer la carte de compensation de mouvement par une prédiction
+	 * DPCM.
+	 * 
+	 * @param blockMovementMap
+	 *            carte de compensation de mouvement.
+	 * @return carte de compensation de mouvement transformée par une prédiction
+	 *         DPCM.
+	 */
+	/*package*/ static Vector2D[][] transformBlockMovementMap(final Vector2D[][] blockMovementMap)
+	{
+		return DPCM.encode(blockMovementMap, 1);
+	}
+	
+	/**
+	 * Obtenir la carte de compensation de mouvement <b>quantifiée</b> à partir
+	 * de la prédiction DPCM de la matrice de originale.
+	 * 
+	 * @param transformedBlockMovementMap
+	 *            prédiction DPCM carte de compensation de mouvement.
+	 * @return carte de compensation de mouvement.
+	 */
+	public static Vector2D[][] inverseTransformBlockMovementMap(final Vector2D[][] transformedBlockMovementMap)
+	{
+		return DPCM.decode(transformedBlockMovementMap);
+	}
+	
+	
 	/**
 	 * Obtenir le vecteur de déplacement dans le bloc spécifié entre deux
 	 * trames, tel que la somme des différences dans le bloc translaté soit
@@ -150,8 +182,8 @@ public class VideoEncoder
 	}
 	
 	/**
-	 * Obtenir la matrice de coefficients de la DCT par bloc quantifiée des
-	 * erreurs de prédiction spécifiées.
+	 * Obtenir la prédiction DPCM de la matrice de coefficients de la DCT par
+	 * bloc quantifiée des erreurs de prédiction spécifiées.
 	 * 
 	 * @param errors
 	 *            carte des erreurs de prédiction.
@@ -163,8 +195,8 @@ public class VideoEncoder
 	 *            échelle de quantification.
 	 * @param firstFrame
 	 *            true si cette trame est la première, ie: "Intra".
-	 * @return matrice de coefficients de la DCT par bloc quantifiée des erreurs
-	 *         de prédiction spécifiées.
+	 * @return prédiction DPCM de la matrice de coefficients de la DCT par bloc
+	 *         quantifiée des erreurs de prédiction spécifiées.
 	 */
 	/*package*/ static double[][] transformErrors(final int[][] errors, final int dctBlockSize,
 			final int[][] quantifWeights, final double quantifScale, final boolean firstFrame)
@@ -202,16 +234,20 @@ public class VideoEncoder
 				}
 			}
 		}
+		
+		// Prédiction DPCM sur ces coefficients.
+		transformedErrors = DPCM.encode(transformedErrors, 1);
+		
 		return transformedErrors;
 	}
 	
 	/**
 	 * Obtenir la carte des erreurs de prédiction <b>quantifiée</b> à partir de
-	 * la matrice de coefficient DCT par bloc.
+	 * la prédiction DPCM de la matrice de coefficient DCT par bloc.
 	 * 
 	 * @param transformedErrors
-	 *            matrice des coefficents de la DCT par bloc des erreurs de
-	 *            prédiction.
+	 *            prédiction DPCM matrice des coefficents de la DCT par bloc des
+	 *            erreurs de prédiction.
 	 * @param dctBlockSize
 	 *            taille des blocs DCT.
 	 * @return carte des erreurs de prédiction à partir de la matrice de
@@ -222,7 +258,10 @@ public class VideoEncoder
 		final int h = transformedErrors.length,
 				  w = transformedErrors[0].length;
 		
-		final double[][] predErrorDouble = DCT.inverseBlockTransform(transformedErrors, dctBlockSize, dctBlockSize);
+		// On effectue le décodage DPCM.
+		final double[][] dctErrors = DPCM.decode(transformedErrors);
+		
+		final double[][] predErrorDouble = DCT.inverseBlockTransform(dctErrors, dctBlockSize, dctBlockSize);
 		final int[][] predError = new int[h][w];
 		
 		for (int y = 0; y < h; ++y)

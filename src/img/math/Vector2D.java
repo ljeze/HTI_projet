@@ -37,4 +37,34 @@ public class Vector2D
 	{
 		return y;
 	}
+	
+	/**
+	 * Additionner ce vecteur et un autre vecteur spécifié.
+	 * 
+	 * @param other
+	 *            autre vecteur à additionner.
+	 * @return somme des deux vecteurs.
+	 */
+	public Vector2D plus(final Vector2D other)
+	{
+		return new Vector2D(x + other.x, y + other.y);
+	}
+	
+	/**
+	 * Soustraire à ce vecteur un autre vecteur spécifié.
+	 * 
+	 * @param other
+	 *            autre vecteur à soustraire.
+	 * @return différence de ce vecteur avec l'autre vecteur.
+	 */
+	public Vector2D minus(final Vector2D other)
+	{
+		return new Vector2D(x - other.x, y - other.y);
+	}
+	
+	@Override
+	public String toString()
+	{
+		return "(" + x + ", " + y + ")";
+	}
 }
