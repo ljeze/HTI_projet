@@ -1,9 +1,18 @@
 package img.videoEncoder;
 
+import static img.videoEncoder.VideoEncoder.computeBlockMovementMap;
+import static img.videoEncoder.VideoEncoder.computeErrors;
+import static img.videoEncoder.VideoEncoder.inverseTransformBlockMovementMap;
+import static img.videoEncoder.VideoEncoder.inverseTransformErrors;
+import static img.videoEncoder.VideoEncoder.reconstructI;
+import static img.videoEncoder.VideoEncoder.reconstructP;
+import static img.videoEncoder.VideoEncoder.transformBlockMovementMap;
+import static img.videoEncoder.VideoEncoder.transformErrors;
+
 import java.util.function.Function;
 
 import img.math.Vector2D;
-import static img.videoEncoder.VideoEncoder.*;
+import img.videoEncoder.EncodedFrame.FrameType;
 
 /**
  * Pipeline d'encodage vidéo.
@@ -42,19 +51,25 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 		 * Matrice des erreurs transformée.
 		 */
 		final double[][] transformedErrors;
+		/**
+		 * Trame actuelle reconstruite.
+		 */
+		final int[][] frameRec;
 		
 		// Si l'on est sur la première trame.
 		if (prevFrameRec == null)
 		{
-			// Les erreurs sont l'image.
+			// La matrice d'erreurs de prédiction est l'image même.
 			errors = frame;
 			
 			// On calcul les coefficients DCT de ces erreurs (l'image) et on applique la quantification.
 			transformedErrors = transformErrors(errors, parameters.getDctBlockSize(),
-					parameters.getQuantificationWeights(), parameters.getQuantificationScale(), true);
+					parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.I);
 			
 			// On reconstruit la trame.
-			prevFrameRec = inverseTransformErrors(transformedErrors, parameters.getDctBlockSize());
+			frameRec = reconstructI(inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()));
+			
+			prevFrameRec = frameRec;
 			
 			// L'envoyer sans prédiction.
 			return EncodedFrame.intraFrame(transformedErrors);
@@ -71,11 +86,11 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 		transformedBlockMovementMap = transformBlockMovementMap(blockMovementMap);
 		// On calcul les coefficients DCT de ces erreurs et on applique la quantification puis prédiction DPCM.
 		transformedErrors = transformErrors(errors, parameters.getDctBlockSize(),
-				parameters.getQuantificationWeights(), parameters.getQuantificationScale(), false);
+				parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P);
 		
 		// On calcul la trame actuelle reconstruite.
-		int[][] frameRec = reconstruct(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()), 
-													 inverseTransformBlockMovementMap(transformedBlockMovementMap), 
+		frameRec = reconstructP(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()), 
+											 inverseTransformBlockMovementMap(transformedBlockMovementMap), 
 									   parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;

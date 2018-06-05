@@ -3,7 +3,7 @@ package gui;
 import java.awt.image.BufferedImage;
 
 import gui.observable.Observable;
-import test.plot.Plot;
+import img.math.Vector2D;
 
 /**
  * Ensemble d'images résultantes du codage d'une trame.
@@ -17,7 +17,7 @@ public class CodingResults
 	/**
 	 * Carte des vecteurs de mouvement.
 	 */
-	public final Observable<BufferedImage> movementImg;
+	public final Observable<Vector2D[][]> movementMap;
 	/**
 	 * Image reconstruite.
 	 */
@@ -30,7 +30,7 @@ public class CodingResults
 	public CodingResults()
 	{
 		originalImg = new Observable<>();
-		movementImg = new Observable<>();
+		movementMap = new Observable<>();
 		reconstImg  = new Observable<>();
 		errorsImg = new Observable<>();
 	}

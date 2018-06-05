@@ -1,12 +1,15 @@
 package gui;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.swing.JFileChooser;
@@ -18,9 +21,9 @@ import img.Images;
 import img.Videos;
 import img.math.Matrices;
 import img.videoEncoder.EncodedFrame;
+import img.videoEncoder.EncodedFrame.FrameType;
 import img.videoEncoder.EncoderParams;
 import img.videoEncoder.VideoEncoder;
-import img.videoEncoder.EncodedFrame.FrameType;
 
 /**
  * Controlleur pour l'interface de test.
@@ -45,6 +48,14 @@ public class TestController
 	 */
 	private final CodingResults codingResults;
 	/**
+	 * Résultats pour une vidéo entière.
+	 */
+	private final Observable<List<CodingResults>> videoResults;
+	/**
+	 * Tas des résultats.
+	 */
+	private final Stack<CodingResults> resultStack;
+	/**
 	 * Processus de codage / décodage.
 	 */
 	private Thread encodingThread;
@@ -55,6 +66,9 @@ public class TestController
 		
 		encoderParams = new EncoderParams();
 		
+		resultStack = new Stack<>();
+		
+		videoResults  = new Observable<>();
 		codingResults = new CodingResults();
 		sequencePathPrefix = new Observable<>();
 	}
@@ -93,6 +107,9 @@ public class TestController
 			{
 				try
 				{
+					videoResults.set(null);
+					resultStack.clear();
+					
 					// Flux de trames originales.
 					Stream<int[][]> inputSequence = Videos.readGray(sequencePathPrefix.get())
 														  .peek(this::handleNewFrame);
@@ -105,6 +122,8 @@ public class TestController
 					VideoEncoder.decode(encodedSequence, encoderParams)
 								.peek(this::handleNewReconstructedFrame)
 								.forEach(img->{});
+					
+					videoResults.set(resultStack.stream().collect(Collectors.toList()));
 				}
 				catch (FileNotFoundException e)
 				{
@@ -116,6 +135,7 @@ public class TestController
 		}
 	}
 	
+	
 	/**
 	 * Une nouvelle trame originale est arrivée.
 	 * 
@@ -124,7 +144,13 @@ public class TestController
 	 */
 	private void handleNewFrame(final int[][] frame)
 	{
-		codingResults.originalImg.set(Images.grayToJavaImg(frame));
+		final CodingResults newResults = new CodingResults();
+		final BufferedImage originalImg = Images.grayToJavaImg(frame);
+		
+		codingResults.originalImg.set(originalImg);
+		newResults.originalImg.set(originalImg);
+		
+		resultStack.push(newResults);
 	}
 	
 	/**
@@ -135,16 +161,18 @@ public class TestController
 	 */
 	private void handleNewEncodedFrame(final EncodedFrame encodedFrame)
 	{
+		final BufferedImage errorsImg = Images
+				.grayToJavaImg(Matrices.map(VideoEncoder.inverseTransformErrors(encodedFrame.getTransformedErrors(),
+						encoderParams.getDctBlockSize()), -255, 255, 0, 255)
+		);
+		
+		codingResults.errorsImg.set(errorsImg);
+		resultStack.peek().errorsImg.set(errorsImg);
+		
 		if (encodedFrame.getType() != FrameType.I)
 		{
-			codingResults.movementImg.set(
-					Images.vectorMapToJavaImg(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()), encoderParams.getMovementBlockSize(),
-							encoderParams.getMovementBlockSize(), Color.BLACK, Color.WHITE, 1.5));
-			
-			codingResults.errorsImg.set(Images
-					.grayToJavaImg(Matrices.map(VideoEncoder.inverseTransformErrors(encodedFrame.getTransformedErrors(),
-							encoderParams.getDctBlockSize()), -255, 255, 0, 255)
-			));
+			resultStack.peek().movementMap.set(encodedFrame.getTransformedBlockMovementMap());
+			codingResults.movementMap.set(encodedFrame.getTransformedBlockMovementMap());
 		}
 	}
 	
@@ -156,7 +184,9 @@ public class TestController
 	 */
 	private void handleNewReconstructedFrame(final int[][] reconstructedFrame)
 	{
-		codingResults.reconstImg.set(Images.grayToJavaImg(reconstructedFrame));
+		final BufferedImage reconstImg = Images.grayToJavaImg(reconstructedFrame);
+		codingResults.reconstImg.set(reconstImg);
+		resultStack.peek().reconstImg.set(reconstImg);
 	}
 	
 	// ======================================================================================
@@ -188,6 +218,14 @@ public class TestController
 		{
 			throw new IllegalArgumentException("Nom de séquence malformé.");
 		}
+	}
+	
+	public void setVideoResult(final int frameIndex)
+	{
+		codingResults.errorsImg.set(videoResults.get().get(frameIndex).errorsImg.get());
+		codingResults.movementMap.set(videoResults.get().get(frameIndex).movementMap.get());
+		codingResults.originalImg.set(videoResults.get().get(frameIndex).originalImg.get());
+		codingResults.reconstImg.set(videoResults.get().get(frameIndex).reconstImg.get());
 	}
 	
 	// ======================================================================================
@@ -223,6 +261,11 @@ public class TestController
 	public Observable<Integer> quantifScaleProperty()
 	{
 		return Observables.observable(encoderParams::getQuantificationScale, encoderParams::quantifierScale);
+	}
+	
+	public Observable<List<CodingResults>> videoResultsProperty()
+	{
+		return videoResults;
 	}
 	
 	/**

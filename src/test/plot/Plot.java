@@ -1,7 +1,5 @@
 package test.plot;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
 import javax.swing.ImageIcon;

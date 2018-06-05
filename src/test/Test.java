@@ -1,6 +1,5 @@
 package test;
 
-import java.awt.Color;
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -152,7 +151,7 @@ public class Test
 	{
 		int[][] img = Images.readGray(getTestFile("mas082.bmp"));
 		//System.out.println(Arrays.deepToString(DCT.transform2D(Matrices.toDouble(img))));
-		
+		/*
 		int[][] tmp = new int[128][256];
 		
 		for (int i = 0; i < tmp.length; ++i)
@@ -160,14 +159,14 @@ public class Test
 			tmp[i][j] = img[i][j];
 		
 		img = tmp;
-		
+		*/
 		final double[][] imgRec = DCT.inverseBlockTransform(DCT.blockTransform(Matrices.toDouble(img), 8, 8), 8, 8);
 		
 		for (int y = 0; y < img.length; ++y)
 		{
 			for (int x = 0; x < img[0].length; ++x)
 			{
-				img[y][x] = (int) Math.min(255, Math.max(0, imgRec[y][x]));
+				img[y][x] = (int) Math.min(255, Math.max(0, Math.round(imgRec[y][x])));
 			}
 		}
 		Plot.showImg(Images.grayToJavaImg(img));
@@ -236,8 +235,8 @@ public class Test
 		
 		try
 		{
-			testImageRead();
-			//testBlockDCT2D();
+			//testImageRead();
+			testBlockDCT2D();
 			//testVideoEncoding();
 		} catch (FileNotFoundException e)
 		{

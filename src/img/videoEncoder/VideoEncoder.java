@@ -1,12 +1,12 @@
 package img.videoEncoder;
 
-import java.util.Arrays;
 import java.util.stream.Stream;
 
 import img.math.Matrices;
 import img.math.Vector2D;
 import img.math.transforms.DCT;
 import img.prediction.DPCM;
+import img.videoEncoder.EncodedFrame.FrameType;
 
 /**
  * Possède toutes les fonctions d'encodage / décodage utilisées dans le pipeline
@@ -193,13 +193,13 @@ public class VideoEncoder
 	 *            matrice des poids de quantification pour un bloc de la dct.
 	 * @param quantifScale
 	 *            échelle de quantification.
-	 * @param firstFrame
-	 *            true si cette trame est la première, ie: "Intra".
+	 * @param frameType
+	 *            type de la trame que l'on va envoyer.
 	 * @return prédiction DPCM de la matrice de coefficients de la DCT par bloc
 	 *         quantifiée des erreurs de prédiction spécifiées.
 	 */
 	/*package*/ static double[][] transformErrors(final int[][] errors, final int dctBlockSize,
-			final int[][] quantifWeights, final double quantifScale, final boolean firstFrame)
+			final int[][] quantifWeights, final double quantifScale, final FrameType frameType)
 	{
 		final int h = errors.length,
 				  w = errors[0].length;
@@ -210,29 +210,33 @@ public class VideoEncoder
 
 		// On sépare la boucle trame intra / prédite pour accélérer et ne pas
 		// faire la vérification à chaque itération.
-		if (firstFrame)	// # Trame intra
+		
+		switch (frameType)
 		{
-			for (int y = 0; y < h; y++)
-			{
-				for (int x = 0; x < w; x++)
+			// # Trame intra
+			case I :
+				for (int y = 0; y < h; y++)
 				{
-					/*predErrorCoeffs[y][x] = ((predErrorCoeffs[y][x]*16.0)/quantifWeights[y%dctBlockSize][x%dctBlockSize]) / 
-											(2.0*quantifScale);*/
+					for (int x = 0; x < w; x++)
+					{
+						/*transformedErrors[y][x] = ((transformedErrors[y][x]*16.0)/quantifWeights[y%dctBlockSize][x%dctBlockSize]) / 
+												(2.0*quantifScale);*/
+					}
 				}
-			}
-		}
-		else			// # Trame prédite
-		{
-			for (int y = 0; y < h; ++y)
-			{
-				for (int x = 0; x < w; ++x)
+				break;
+				
+			// # Trame prédite
+			case P :
+				for (int y = 0; y < h; ++y)
 				{
-					transformedErrors[y][x] = 
-							(transformedErrors[y][x]*16.0/quantifWeights[y%dctBlockSize][x%dctBlockSize] - 
-												Math.signum(transformedErrors[y][x])*quantifScale) / 
-											(2*quantifScale);
+					for (int x = 0; x < w; ++x)
+					{
+						/*transformedErrors[y][x] = (transformedErrors[y][x]*16.0 / quantifWeights[y%dctBlockSize][x%dctBlockSize] - 
+													Math.signum(transformedErrors[y][x])*quantifScale) / 
+												(2*quantifScale);*/
+					}
 				}
-			}
+				break;
 		}
 		
 		// Prédiction DPCM sur ces coefficients.
@@ -268,7 +272,8 @@ public class VideoEncoder
 		{
 			for (int x = 0; x < w; ++x)
 			{
-				predError[y][x] = (int) Math.max(-255, Math.min(predErrorDouble[y][x], 255));
+				predError[y][x] = (int) Math.round(predErrorDouble[y][x]);
+				//predError[y][x] = (int) Math.max(-255, Math.min(Math.round(predErrorDouble[y][x]), 255));
 			}
 		}
 		
@@ -304,15 +309,16 @@ public class VideoEncoder
 			{
 				// Vecteur de déplacement du bloc contenant le pixel (x, y).
 				final Vector2D blockMovement = blockMovementMap[y/blockH][x/blockW];
+				frameErrors[y][x] = frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()];
 				
-				frameErrors[y][x] = Math.max(-255, Math.min(frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()], 255));
+				//frameErrors[y][x] = Math.max(-255, Math.min(frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()], 255));
 			}
 		}
 		return frameErrors;
 	}
 	
 	/**
-	 * Reconstruire une trame à partir des erreurs de prédictions et de la trame
+	 * Reconstruire une trame P à partir des erreurs de prédictions et de la trame
 	 * précédente, avec compensation de mouvement.
 	 * 
 	 * @param prevFrameRec
@@ -327,7 +333,7 @@ public class VideoEncoder
 	 *            hauteur des blocs.
 	 * @return trame reconstruite.
 	 */
-	/*package*/ static int[][] reconstruct(final int[][] prevFrameRec, final int[][] predError,
+	/*package*/ static int[][] reconstructP(final int[][] prevFrameRec, final int[][] predError,
 			final Vector2D[][] blockMovementMap, final int blockW, final int blockH)
 	{
 		final int h = prevFrameRec.length,
@@ -342,6 +348,29 @@ public class VideoEncoder
 				final Vector2D blockMovement = blockMovementMap[y/blockH][x/blockW];
 				
 				frameRec[y][x] = Math.max(-255, Math.min(prevFrameRec[y - blockMovement.y()][x - blockMovement.x()] + predError[y][x], 255));
+			}
+		}
+		return frameRec;
+	}
+	
+	/**
+	 * Reconstruire une trame I à partir des erreurs de prédictions.
+	 * 
+	 * @param predError
+	 *            erreurs de prédiction.
+	 * @return trame reconstruite.
+	 */
+	/*package*/ static int[][] reconstructI(final int[][] predError)
+	{
+		final int h = predError.length,
+				  w = predError[0].length;
+		
+		final int[][] frameRec = new int[h][w];
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				frameRec[y][x] = Math.max(-255, Math.min(predError[y][x], 255));
 			}
 		}
 		return frameRec;

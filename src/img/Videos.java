@@ -33,6 +33,7 @@ public class Videos
 		{
 			return Files.list(sequencePath.getParent())
 					 	.filter(frameMatcher::matches)
+					 	.sorted()
 					 	.map(asUncheckedFunction(Images::readGray));
 		} catch (IOException e)
 		{

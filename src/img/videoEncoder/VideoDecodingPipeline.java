@@ -1,8 +1,6 @@
 package img.videoEncoder;
 
-import static img.videoEncoder.VideoEncoder.inverseTransformBlockMovementMap;
-import static img.videoEncoder.VideoEncoder.inverseTransformErrors;
-import static img.videoEncoder.VideoEncoder.reconstruct;
+import static img.videoEncoder.VideoEncoder.*;
 
 import java.util.function.Function;
 
@@ -38,20 +36,26 @@ public class VideoDecodingPipeline implements Function<EncodedFrame, int[][]>
 	@Override
 	public int[][] apply(final EncodedFrame frame)
 	{
+		/**
+		 * Erreurs de prédiction.
+		 */
+		final int[][] errors;
+		
 		// Trame Intra.
 		if (frame.getType() == FrameType.I)
 		{
-			prevFrameRec = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
+			errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
+			prevFrameRec = reconstructI(errors);
 			return prevFrameRec;
 		}
 		
-		// La trame est une matrice d'erreurs de prédiction.
-		int[][] errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
+		// On récupère les erreurs de prédiction.
+		errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
 		// La carte de compensation de mouvement.
-		Vector2D[][] blockMovementMap = inverseTransformBlockMovementMap(frame.getTransformedBlockMovementMap());
+		final Vector2D[][] blockMovementMap = inverseTransformBlockMovementMap(frame.getTransformedBlockMovementMap());
 		
 		// On calcul la trame actuelle reconstruite.
-		int[][] frameRec = reconstruct(prevFrameRec, errors, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		final int[][] frameRec = reconstructP(prevFrameRec, errors, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;
 		return frameRec;

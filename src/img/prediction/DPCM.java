@@ -79,7 +79,8 @@ public class DPCM
 	 */
 	public static double quantize(final double x, final double step)
 	{
-		return step * Math.round(x / step);
+		return x;
+		//return step * Math.round(x / step);
 	}
 	
 	/**
@@ -154,7 +155,8 @@ public class DPCM
 	 */
 	public static Vector2D quantize(final Vector2D vector, final int step)
 	{
-		return new Vector2D(step * (int)Math.round((double)vector.x() / step), step * (int)Math.round((double)vector.y() / step)) ;
+		return vector;
+//		return new Vector2D(step * (int)Math.round((double)vector.x() / step), step * (int)Math.round((double)vector.y() / step)) ;
 	}
 	
 }

@@ -1,11 +1,13 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.image.BufferedImage;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -15,12 +17,15 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.event.ChangeListener;
 
+import gui.custom.VectorMapView;
 import gui.observable.Observables;
 
 /**
@@ -59,6 +64,7 @@ public class TestFrame extends JFrame
 		buildFrame();
 		
 		pack();
+		setSize(500, 500);
 	}
 	
 	/**
@@ -150,39 +156,92 @@ public class TestFrame extends JFrame
 	 */
 	private JPanel buildViewPanel()
 	{
-		final JPanel viewPanel = new JPanel(new GridLayout(2, 2, 20, 20));
+		final JPanel viewPanel = new JPanel(new BorderLayout());
+		final JPanel resultPanel = new JPanel(new GridLayout(2, 2, 20, 20));
 		
 		final JLabel originalImg = new JLabel("", JLabel.CENTER),	// Image originale.
-					 movementImg = new JLabel("", JLabel.CENTER),	// Carte des vecteurs de mouvement.
 					 reconstImg  = new JLabel("", JLabel.CENTER),	// Image reconstruite.
 					 errorsImg   = new JLabel("", JLabel.CENTER);	// Carte des erreurs.
+		
+		final VectorMapView movementMap = new VectorMapView();	// Carte des vecteurs de mouvement.
+		
+		final JSlider progressSlider = new JSlider(0, 0);
+		progressSlider.setPaintTicks(true);
+		progressSlider.setSnapToTicks(true);
+		progressSlider.setMinorTickSpacing(1);
+		progressSlider.setMajorTickSpacing(1);
+		progressSlider.setPaintLabels(true);
 		
 		viewPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 		
 		originalImg.setBorder(BorderFactory.createTitledBorder("Trame originale"));
-		movementImg.setBorder(BorderFactory.createTitledBorder("Vecteurs de mouvement"));
-		reconstImg .setBorder(BorderFactory.createTitledBorder("Image reconstruite."));
+		movementMap.setBorder(BorderFactory.createTitledBorder("Vecteurs de mouvement"));
+		reconstImg .setBorder(BorderFactory.createTitledBorder("Image reconstruite"));
 		errorsImg  .setBorder(BorderFactory.createTitledBorder("Erreurs de prédiction"));
 		
+		movementMap.setBackground(Color.WHITE);
+		
 		// Coordonne les résultats et les labels d'image.
-		controller.getCodingResults().originalImg.addListener(img->
-			SwingUtilities.invokeLater(()->originalImg.setIcon(new ImageIcon(img))));
+		controller.getCodingResults().originalImg.addListener(img->setLabelImage(originalImg, img));
+		controller.getCodingResults().reconstImg.addListener(img->setLabelImage(reconstImg, img));
+		controller.getCodingResults().errorsImg.addListener(img->setLabelImage(errorsImg, img));
 		
-		controller.getCodingResults().movementImg.addListener(img->
-			SwingUtilities.invokeLater(()->movementImg.setIcon(new ImageIcon(img))));
-	
-		controller.getCodingResults().reconstImg.addListener(img->
-			SwingUtilities.invokeLater(()->reconstImg.setIcon(new ImageIcon(img))));
+		controller.getCodingResults().movementMap.addListener(map->SwingUtilities.invokeLater(()->
+			movementMap.setVectorMap(map, controller.movementBlockSizeProperty().get())));
 		
-		controller.getCodingResults().errorsImg.addListener(img->
-			SwingUtilities.invokeLater(()->errorsImg.setIcon(new ImageIcon(img))));
+		progressSlider.setVisible(false);
+		controller.videoResultsProperty().addListener(results->
+		{
+			if (results != null && results.size() > 0)
+			{
+				progressSlider.setMaximum(results.size()-1);
+				for (final ChangeListener listener : progressSlider.getChangeListeners())
+				{
+					progressSlider.removeChangeListener(listener);
+				}
+				
+				progressSlider.addChangeListener(e->
+				{
+					controller.setVideoResult(progressSlider.getValue());
+				});
+				controller.setVideoResult(0);
+				progressSlider.setValue(0);
+				progressSlider.setVisible(true);
+			}
+			else
+			{
+				progressSlider.setVisible(false);
+			}
+		});
 		
-		viewPanel.add(originalImg);
-		viewPanel.add(movementImg);
-		viewPanel.add(reconstImg);
-		viewPanel.add(errorsImg);
+		resultPanel.add(originalImg);
+		resultPanel.add(movementMap);
+		resultPanel.add(reconstImg);
+		resultPanel.add(errorsImg);
+		
+		viewPanel.add(resultPanel, BorderLayout.CENTER);
+		viewPanel.add(progressSlider, BorderLayout.SOUTH);
 		
 		return viewPanel;
+	}
+	
+	/**
+	 * Définir l'image d'un label.
+	 * 
+	 * @param label
+	 *            label sur lequel on modifie l'image.
+	 * @param img
+	 *            image du label.
+	 */
+	private void setLabelImage(final JLabel label, final BufferedImage img)
+	{
+		SwingUtilities.invokeLater(()->
+		{
+			label.setIcon(img != null ? 
+							new ImageIcon(img) 
+						: 
+							null);
+		});
 	}
 	
 	/**
