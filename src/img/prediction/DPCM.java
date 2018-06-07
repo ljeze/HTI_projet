@@ -32,7 +32,7 @@ public class DPCM
 	    	
 	        for (int c = 0; c < w; ++c)
 	        {
-	        	error[l][c] = quantize(matrix[l][c] - lastPred, step);
+	        	error[l][c] = /*quantize(*/matrix[l][c] - lastPred/*, step)*/;
 	        	lastPred = error[l][c] + lastPred;
 	        }
 	    }
