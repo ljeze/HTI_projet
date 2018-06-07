@@ -6,6 +6,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
+import gui.custom.VectorMapView;
+import img.math.Vector2D;
+
 /**
  * Classe utilitaire pour l'affichage de fonctions et d'images.
  */
@@ -34,6 +37,19 @@ public class Plot
 		*/
 		JLabel imgLbl = new JLabel(new ImageIcon(img));
 		frame.add(imgLbl);
+		
+		frame.setVisible(true);
+		frame.pack();
+	}
+	
+	public static void showVectorMap(final Vector2D[][] vectorMap, final int bs)
+	{
+		JFrame frame = new JFrame();
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
+		VectorMapView view = new VectorMapView();
+		view.setVectorMap(vectorMap, bs);
+		frame.add(view);
 		
 		frame.setVisible(true);
 		frame.pack();

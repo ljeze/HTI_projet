@@ -174,9 +174,9 @@ public class TestController
 		
 		if (encodedFrame.getType() != FrameType.I)
 		{
-			codingResults.movementMap.set(encodedFrame.getTransformedBlockMovementMap());
+			codingResults.movementMap.set(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()));
 			
-			resultStack.peek().movementMap.set(encodedFrame.getTransformedBlockMovementMap());
+			resultStack.peek().movementMap.set(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()));
 			resultStack.peek().movementMapEntropy.set(Matrices.computeEntropy(encodedFrame.getTransformedBlockMovementMap()));
 		}
 	}
