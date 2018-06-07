@@ -74,7 +74,6 @@ public class VideoEncoder
 		return DPCM.decode(transformedBlockMovementMap);
 	}
 	
-	
 	/**
 	 * Obtenir le vecteur de déplacement dans le bloc spécifié entre deux
 	 * trames, tel que la somme des différences dans le bloc translaté soit

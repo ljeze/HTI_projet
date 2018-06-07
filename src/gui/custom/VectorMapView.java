@@ -117,7 +117,15 @@ public class VectorMapView extends JComponent
 		{
 			for (int x = 0; x < nW; ++x)
 			{
-				drawVector(g2, x*dxScaled, y*dyScaled, (int)(vectorMap[y][x].x() * scale), (int)(vectorMap[y][x].y() * scale));
+				/*final int vectX = x*dxScaled,
+						  vectY = y*dyScaled,
+						  vectTipX = vectX - (int)Math.round(vectorMap[y][x].x() * scale),
+						  vectTipY = vectY - (int)Math.round(vectorMap[y][x].y() * scale),
+						  vectDx   = vectTipX - vectX,
+						  vectDy   = vectTipY - vectY;
+				*/
+				drawVector(g2, x*dxScaled, y*dyScaled, -(int)Math.round(vectorMap[y][x].x() * scale), -(int)Math.round(vectorMap[y][x].y() * scale));
+				//drawVector(g2, vectTipX, vectTipY, vectDx, vectDy);
 			}
 		}
 		g2.translate(-xOff, -yOff);
@@ -173,8 +181,14 @@ public class VectorMapView extends JComponent
 	 * @param dy
 	 *            composante y.
 	 */
-	private static void drawVector(final Graphics g, final int x, final int y, final int dx, final int dy)
+	private static void drawVector(final Graphics g,  int x,  int y,  int dx,  int dy)
 	{
+		int oldX = x,
+			oldY = y;
+		
+		
+		
+		
 		final double arrowAngle  = Math.PI/8,
 					 arrowLength = 4;
 		final double vectorAngle = Math.atan2(dy, dx);

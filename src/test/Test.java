@@ -14,6 +14,7 @@ import img.math.Complex;
 import img.math.Matrices;
 import img.math.transforms.DCT;
 import img.math.transforms.FFT;
+import img.prediction.DPCM;
 import img.videoEncoder.VideoEncoder;
 import img.videoEncoder.io.EncodedFrame;
 import img.videoEncoder.io.EncoderParams;
@@ -182,6 +183,31 @@ public class Test
 		Plot.showImg(Images.grayToJavaImg(img));
 	}
 	
+	public static void testDPCM()
+	{
+		final int w = 50,
+				  h = 30;
+		
+		final double[][] randomMatrix = new double[h][];
+		for (int l = 0; l < randomMatrix.length; ++l)
+		{
+			randomMatrix[l] = IntStream.range(0, w).mapToDouble(i->Math.random()).toArray();
+		}
+		
+		final double[][] reconstructedMatrix = DPCM.decode(DPCM.encode(randomMatrix, 1));
+OUT_LOOP: for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				if (reconstructedMatrix[y][x] != randomMatrix[y][x])
+				{
+					System.err.println("Erreur !");
+					break OUT_LOOP;
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Tester l'encodage d'une séquence.
 	 * @throws FileNotFoundException
@@ -233,6 +259,8 @@ public class Test
 		}
 		*/
 		
+		testDPCM();
+		/*
 		try
 		{
 			//testImageRead();
@@ -241,7 +269,7 @@ public class Test
 		} catch (FileNotFoundException e)
 		{
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 }

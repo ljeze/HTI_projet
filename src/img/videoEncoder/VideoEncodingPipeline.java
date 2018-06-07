@@ -14,6 +14,7 @@ import java.util.function.Function;
 import img.math.Vector2D;
 import img.videoEncoder.io.EncodedFrame;
 import img.videoEncoder.io.EncoderParams;
+import test.plot.Plot;
 import img.videoEncoder.io.EncodedFrame.FrameType;
 
 /**
@@ -86,6 +87,7 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 		
 		// On calcul la carte de compensation de mouvement transformée.
 		transformedBlockMovementMap = transformBlockMovementMap(blockMovementMap);
+		
 		// On calcul les coefficients DCT de ces erreurs et on applique la quantification puis prédiction DPCM.
 		transformedErrors = transformErrors(errors, parameters.getDctBlockSize(),
 				parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P);
