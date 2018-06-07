@@ -1,4 +1,4 @@
-package img.videoEncoder;
+package img.videoEncoder.io;
 
 /**
  * Représente les paramètres de l'encodeur vidéo.

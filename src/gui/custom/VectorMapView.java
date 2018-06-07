@@ -9,7 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 
 import javax.swing.JComponent;
 
@@ -47,6 +46,11 @@ public class VectorMapView extends JComponent
 	private int yOff;
 	
 	/**
+	 * Centre automatiquement la vue ou pas.
+	 */
+	private boolean autoCenter;
+	
+	/**
 	 * UID de sérialisation par défaut.
 	 */
 	private static final long serialVersionUID = 1L;
@@ -54,6 +58,9 @@ public class VectorMapView extends JComponent
 	public VectorMapView()
 	{
 		scale = 1.0;
+		
+		autoCenter = true;
+		
 		final VectorMapViewAdapter adapter = new VectorMapViewAdapter();
 		addMouseListener(adapter);
 		addMouseMotionListener(adapter);
@@ -74,6 +81,22 @@ public class VectorMapView extends JComponent
 		final int width  = getWidth()-getInsets().left-getInsets().right, 
 				  height = getHeight()-getInsets().top-getInsets().bottom;
 		
+		final int nW = vectorMap[0].length,
+				  nH = vectorMap.length;
+		
+		final int dxScaled = (int) (dx * scale),
+				  dyScaled = (int) (dy * scale);
+		
+		final int mapWidth  = dxScaled * (nW-1),
+				  mapHeight = dyScaled * (nH-1);
+		
+		// Recentrage automatique de la vue.
+		if (autoCenter)
+		{
+			xOff = width /2 - mapWidth /2;
+			yOff = height/2 - mapHeight/2;
+		}
+		
 		final Graphics2D g2 = (Graphics2D) g;
 		final Shape clip = g2.getClip();
 		final AffineTransform transform = g2.getTransform();
@@ -87,12 +110,6 @@ public class VectorMapView extends JComponent
 		
 		g2.setColor(getBackground().darker().darker());
 		g2.drawRect(0, 0, width-1, height-1);
-		
-		final int nW = vectorMap[0].length,
-				  nH = vectorMap.length;
-		
-		final int dxScaled = (int) (dx * scale),
-				  dyScaled = (int) (dy * scale);
 		
 		g2.translate(xOff, yOff);
 		g2.setColor(getForeground());
@@ -177,7 +194,20 @@ public class VectorMapView extends JComponent
 				 (int)(tipY + arrowLength*Math.sin(vectorAngle - (Math.PI-arrowAngle))));
 		}
 	}
-
+	
+	/**
+	 * Définir la valeur du flag autoCenter qui indique si la vue est
+	 * automatiquement centrée ou pas.
+	 * 
+	 * @param autoCenter
+	 *            indique si la vue est automatiquement centrée ou pas.
+	 */
+	public void setAutoCenter(final boolean autoCenter)
+	{
+		this.autoCenter = autoCenter;
+	}
+	
+	
 	/**
 	 * Controleur de souris pour le visualisateur de champs de vecteurs.
 	 */
@@ -212,7 +242,7 @@ public class VectorMapView extends JComponent
 			final Point2D mousePos;
 			
 			lastMousePos= new Point2D.Double(e.getX() / scale, e.getY() / scale);*/
-			scale += e.getPreciseWheelRotation()/10;
+			scale -= e.getPreciseWheelRotation()/10;
 			/*mousePos = new Point2D.Double(lastMousePos.getX()*scale, lastMousePos.getY()*scale);
 			
 			xOff -= mousePos.getX() - e.getX();
@@ -228,6 +258,9 @@ public class VectorMapView extends JComponent
 			{
 				return;
 			}
+			
+			autoCenter = false;
+			
 			setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
 			xOff = (int) (lastOffset.getX() + e.getX() - lastPressedPoint.getX());
 			yOff = (int) (lastOffset.getY() + e.getY() - lastPressedPoint.getY());

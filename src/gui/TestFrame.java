@@ -23,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeListener;
 
 import gui.custom.VectorMapView;
@@ -55,6 +56,20 @@ public class TestFrame extends JFrame
 		{
 			e.printStackTrace();
 		}*/
+		/*
+		try
+		{
+			for (final LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
+			{
+				if ("Nimbus".equals(info.getName()))
+				{
+					UIManager.setLookAndFeel(info.getClassName());
+					break;
+				}
+			}
+		} catch (Exception e)
+		{
+		}*/
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLayout(new BorderLayout());
@@ -64,7 +79,7 @@ public class TestFrame extends JFrame
 		buildFrame();
 		
 		pack();
-		setSize(500, 500);
+		setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH);
 	}
 	
 	/**
@@ -94,6 +109,7 @@ public class TestFrame extends JFrame
 		toolBar.setFloatable(false);
 
 		startBtn.setEnabled(false);
+		startBtn.setMargin(new Insets(5, 5, 5, 5));
 		Observables.notNull(controller.getSequencePathPrefix()).addListener(startBtn::setEnabled);
 		
 		openBtn.addActionListener(controller::handleOpenFile);
@@ -123,13 +139,15 @@ public class TestFrame extends JFrame
 				return new Dimension(super.getMaximumSize().width, super.getPreferredSize().height);
 			}
 		 };
-		
-		final JTextField dctSizeField 	   = new JTextField(),
-						 movementSizeField = new JTextField(),
-						 quantifScaleField = new JTextField();
+		 
+		final JTextField dctSizeField 	   = new JTextField(3),
+						 movementSizeField = new JTextField(3),
+						 quantifScaleField = new JTextField(3);
 		
 		parameterPanel.setLayout(new BoxLayout(parameterPanel, BoxLayout.Y_AXIS));
 		parameterPanel.setVisible(false);
+		parameterPanel.setMinimumSize(new Dimension(0, 0));
+		
 		Observables.notNull(controller.getSequencePathPrefix()).addListener(parameterPanel::setVisible);
 		// Marges du panneau.
 		parameterPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20),
@@ -165,6 +183,16 @@ public class TestFrame extends JFrame
 		
 		final VectorMapView movementMap = new VectorMapView();	// Carte des vecteurs de mouvement.
 		
+		final String originalTxt    = "Trame originale",
+					 reconstTxt     = "Image reconstruite",
+					 errorsTxt      = "Erreurs de prédiction",
+					 movementMapTxt = "Vecteurs de mouvement";
+		
+		final TitledBorder originalImgTitle = BorderFactory.createTitledBorder(originalTxt),
+						   reconstImgTitle  = BorderFactory.createTitledBorder(reconstTxt),
+						   errorsImgTitle   = BorderFactory.createTitledBorder(errorsTxt),
+						   movementMapTitle = BorderFactory.createTitledBorder(movementMapTxt); 
+		
 		final JSlider progressSlider = new JSlider(0, 0);
 		progressSlider.setPaintTicks(true);
 		progressSlider.setSnapToTicks(true);
@@ -174,10 +202,10 @@ public class TestFrame extends JFrame
 		
 		viewPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 		
-		originalImg.setBorder(BorderFactory.createTitledBorder("Trame originale"));
-		movementMap.setBorder(BorderFactory.createTitledBorder("Vecteurs de mouvement"));
-		reconstImg .setBorder(BorderFactory.createTitledBorder("Image reconstruite"));
-		errorsImg  .setBorder(BorderFactory.createTitledBorder("Erreurs de prédiction"));
+		originalImg.setBorder(originalImgTitle);
+		reconstImg .setBorder(reconstImgTitle);
+		errorsImg  .setBorder(errorsImgTitle);
+		movementMap.setBorder(movementMapTitle);
 		
 		movementMap.setBackground(Color.WHITE);
 		
@@ -188,6 +216,10 @@ public class TestFrame extends JFrame
 		
 		controller.getCodingResults().movementMap.addListener(map->SwingUtilities.invokeLater(()->
 			movementMap.setVectorMap(map, controller.movementBlockSizeProperty().get())));
+		
+		controller.getCodingResults().originalEntropy.addListener(entropy->originalImgTitle.setTitle(originalTxt + ": entropie = " + entropy));
+		controller.getCodingResults().errorsEntropy.addListener(entropy->errorsImgTitle.setTitle(errorsTxt + ": entropie = " + entropy));
+		controller.getCodingResults().movementMapEntropy.addListener(entropy->movementMapTitle.setTitle(movementMapTxt + ": entropie = " + entropy));
 		
 		progressSlider.setVisible(false);
 		controller.videoResultsProperty().addListener(results->
@@ -274,6 +306,10 @@ public class TestFrame extends JFrame
 			/**/c.gridx = 0; c.gridy = row; c.weightx = 0;/**/
 			formPanel.add(componentRow[0], c);
 			
+			if (componentRow[1] instanceof JTextField)
+			{
+				((JTextField) componentRow[1]).setHorizontalAlignment(JTextField.CENTER);
+			}
 			/**/c.gridx = 1; c.gridy = row; c.weightx = 1; c.fill = GridBagConstraints.HORIZONTAL;/**/
 			formPanel.add(componentRow[1], c);
 		}

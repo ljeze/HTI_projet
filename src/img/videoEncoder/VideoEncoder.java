@@ -6,7 +6,9 @@ import img.math.Matrices;
 import img.math.Vector2D;
 import img.math.transforms.DCT;
 import img.prediction.DPCM;
-import img.videoEncoder.EncodedFrame.FrameType;
+import img.videoEncoder.io.EncodedFrame;
+import img.videoEncoder.io.EncoderParams;
+import img.videoEncoder.io.EncodedFrame.FrameType;
 
 /**
  * Possède toutes les fonctions d'encodage / décodage utilisées dans le pipeline
@@ -221,6 +223,7 @@ public class VideoEncoder
 					{
 						/*transformedErrors[y][x] = ((transformedErrors[y][x]*16.0)/quantifWeights[y%dctBlockSize][x%dctBlockSize]) / 
 												(2.0*quantifScale);*/
+						//transformedErrors[y][x] = Math.round(transformedErrors[y][x] / 1.5)*1.5;
 					}
 				}
 				break;

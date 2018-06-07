@@ -107,9 +107,12 @@ public class Matrices
 	 * Obtenir une matrice d'entiers à partir d'une matrice de doubles.
 	 * 
 	 * @param matrix
+	 *            matrice de doubles.
 	 * @param low
+	 *            borne inférieure des entiers.
 	 * @param high
-	 * @return
+	 *            borne supérieur des entiers.
+	 * @return matrice d'entiers.
 	 */
 	public static int[][] toInt(final double[][] matrix, final int low, final int high)
 	{
@@ -148,6 +151,84 @@ public class Matrices
 				  w = matrix[0].length;
 		
 		final Map<Double, Integer> histogram = new HashMap<>();
+		
+		// Compter chaque occurence de double présent dans la matrice.
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				Integer counter = histogram.get(matrix[y][x]);
+				histogram.put(matrix[y][x], counter == null ? 1 : (counter+1));
+			}
+		}
+		
+		double entropy = 0;
+		for (int symbolCounter : histogram.values())
+		{
+			// Probabilité d'apparition de ce symbole.
+			final double symbolP = (double) symbolCounter / (w*h);
+			entropy += symbolP * (Math.log(symbolP)/LOG2);
+		}
+		
+		return -entropy;
+	}
+	
+	/**
+	 * Calcule l'entropie d'une matrice représentant une source de symboles
+	 * entiers.
+	 * 
+	 * @param matrix
+	 *            matrice, source de symboles entiers.
+	 * @param min
+	 *            valeur minimale de cette matrice.
+	 * @param max
+	 *            valeur maximale inclue de cette matrice.
+	 * @return entropie de cette matrice.
+	 */
+	public static double computeEntropy(final int[][] matrix, final int min, final int max)
+	{
+		final int h = matrix.length,
+				  w = matrix[0].length;
+		
+		final int[] histogram = new int[max - min + 1];
+		
+		// Compter chaque occurence de double présent dans la matrice.
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				++histogram[matrix[y][x]];
+			}
+		}
+		
+		double entropy = 0;
+		for (int i = min; i <= max; ++i)
+		{
+			// Probabilité d'apparition de ce symbole.
+			if (histogram[i] > 0)
+			{
+				final double symbolP = (double) histogram[i] / (w*h);
+				entropy -= symbolP * (Math.log(symbolP)/LOG2);
+			}
+		}
+		
+		return entropy;
+	}
+	
+	
+	/**
+	 * Calcule l'entropie d'une matrice représentant une source de symboles.
+	 * 
+	 * @param matrix
+	 *            matrice, source de symboles.
+	 * @return entropie de cette matrice.
+	 */
+	public static <T> double computeEntropy(final T[][] matrix)
+	{
+		final int h = matrix.length,
+				  w = matrix[0].length;
+		
+		final Map<T, Integer> histogram = new HashMap<>();
 		
 		// Compter chaque occurence de double présent dans la matrice.
 		for (int y = 0; y < h; ++y)

@@ -5,7 +5,9 @@ import static img.videoEncoder.VideoEncoder.*;
 import java.util.function.Function;
 
 import img.math.Vector2D;
-import img.videoEncoder.EncodedFrame.FrameType;
+import img.videoEncoder.io.EncodedFrame;
+import img.videoEncoder.io.EncoderParams;
+import img.videoEncoder.io.EncodedFrame.FrameType;
 
 /**
  * Pipeline de décodage vidéo.

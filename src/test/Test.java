@@ -14,9 +14,9 @@ import img.math.Complex;
 import img.math.Matrices;
 import img.math.transforms.DCT;
 import img.math.transforms.FFT;
-import img.videoEncoder.EncodedFrame;
-import img.videoEncoder.EncoderParams;
 import img.videoEncoder.VideoEncoder;
+import img.videoEncoder.io.EncodedFrame;
+import img.videoEncoder.io.EncoderParams;
 import test.plot.Plot;
 
 /**

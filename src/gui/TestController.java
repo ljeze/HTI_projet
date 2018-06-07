@@ -20,10 +20,10 @@ import gui.observable.Observables;
 import img.Images;
 import img.Videos;
 import img.math.Matrices;
-import img.videoEncoder.EncodedFrame;
-import img.videoEncoder.EncodedFrame.FrameType;
-import img.videoEncoder.EncoderParams;
 import img.videoEncoder.VideoEncoder;
+import img.videoEncoder.io.EncodedFrame;
+import img.videoEncoder.io.EncodedFrame.FrameType;
+import img.videoEncoder.io.EncoderParams;
 
 /**
  * Controlleur pour l'interface de test.
@@ -149,6 +149,7 @@ public class TestController
 		
 		codingResults.originalImg.set(originalImg);
 		newResults.originalImg.set(originalImg);
+		newResults.originalEntropy.set(Matrices.computeEntropy(frame, 0, 255));
 		
 		resultStack.push(newResults);
 	}
@@ -167,12 +168,16 @@ public class TestController
 		);
 		
 		codingResults.errorsImg.set(errorsImg);
+		
 		resultStack.peek().errorsImg.set(errorsImg);
+		resultStack.peek().errorsEntropy.set(Matrices.computeEntropy(encodedFrame.getTransformedErrors()));
 		
 		if (encodedFrame.getType() != FrameType.I)
 		{
-			resultStack.peek().movementMap.set(encodedFrame.getTransformedBlockMovementMap());
 			codingResults.movementMap.set(encodedFrame.getTransformedBlockMovementMap());
+			
+			resultStack.peek().movementMap.set(encodedFrame.getTransformedBlockMovementMap());
+			resultStack.peek().movementMapEntropy.set(Matrices.computeEntropy(encodedFrame.getTransformedBlockMovementMap()));
 		}
 	}
 	
@@ -220,12 +225,22 @@ public class TestController
 		}
 	}
 	
+	/**
+	 * Définir le résultat de la frameIndex ème trame.
+	 * 
+	 * @param frameIndex
+	 *            index de la trame à définir.
+	 */
 	public void setVideoResult(final int frameIndex)
 	{
 		codingResults.errorsImg.set(videoResults.get().get(frameIndex).errorsImg.get());
 		codingResults.movementMap.set(videoResults.get().get(frameIndex).movementMap.get());
 		codingResults.originalImg.set(videoResults.get().get(frameIndex).originalImg.get());
 		codingResults.reconstImg.set(videoResults.get().get(frameIndex).reconstImg.get());
+		
+		codingResults.originalEntropy.set(videoResults.get().get(frameIndex).originalEntropy.get());
+		codingResults.errorsEntropy.set(videoResults.get().get(frameIndex).errorsEntropy.get());
+		codingResults.movementMapEntropy.set(videoResults.get().get(frameIndex).movementMapEntropy.get());
 	}
 	
 	// ======================================================================================

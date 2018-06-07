@@ -187,6 +187,47 @@ public class DCT
 		return symExtension;
 	}
 	
+	public static double[] transform(final double[] vector)
+	{
+		final int N = vector.length;
+		final double[] vectorDCT = new double[vector.length];
+		// k = 0
+		{
+			for (int n = 0; n < N; ++n)
+			{
+				vectorDCT[0] += 1.0/Math.sqrt(N) * vector[n];
+			}
+		}
+		
+		for (int k = 1; k < N; ++k)
+		{
+			for (int n = 0; n < N; ++n)
+			{
+				vectorDCT[k] += Math.sqrt(2.0/N) * Math.cos((Math.PI*(2*n+1)*k)/(2*N)) * vector[n];
+			}
+		}
+		
+		return vectorDCT;
+	}
+	
+	public static double[] inverseTransform(final double[] vectorDCT)
+	{
+		final int N = vectorDCT.length;
+		final double[] vector = new double[N];
+		
+		for (int k = 0; k < N; ++k)
+		{
+			// n = 0
+			vector[k] = vectorDCT[0] * 1.0/Math.sqrt(N);
+			for (int n = 1; n < N; ++n)
+			{
+				vector[k] += Math.sqrt(2.0/N) * Math.cos((Math.PI*(2*k+1)*n)/(2*N)) * vectorDCT[n];
+			}
+		}
+		
+		return vector;
+	}
+	
 	/**
 	 * Faire une DCT d'un vecteur 1D.
 	 * Voir <a href="https://ieeexplore.ieee.org/document/1163351/">A fast cosine transform in one and two dimensions</a>
@@ -217,30 +258,6 @@ public class DCT
 		{
 			vectorDCT[i] /= Math.sqrt(n);
 		}
-		return vectorDCT;
-	}
-	*/
-	
-	public static double[] transform(final double[] vector)
-	{
-		final int N = vector.length;
-		final double[] vectorDCT = new double[vector.length];
-		// k = 0
-		{
-			for (int n = 0; n < N; ++n)
-			{
-				vectorDCT[0] += 1.0/Math.sqrt(N) * vector[n];
-			}
-		}
-		
-		for (int k = 1; k < N; ++k)
-		{
-			for (int n = 0; n < N; ++n)
-			{
-				vectorDCT[k] += Math.sqrt(2.0/N) * Math.cos((Math.PI*(2*n+1)*k)/(2*N)) * vector[n];
-			}
-		}
-		
 		return vectorDCT;
 	}
 	
@@ -285,22 +302,4 @@ public class DCT
 		
 		return vector;
 	}*/
-	
-	public static double[] inverseTransform(final double[] vectorDCT)
-	{
-		final int N = vectorDCT.length;
-		final double[] vector = new double[N];
-		
-		for (int k = 0; k < N; ++k)
-		{
-			// n = 0
-			vector[k] = vectorDCT[0] * 1.0/Math.sqrt(N);
-			for (int n = 1; n < N; ++n)
-			{
-				vector[k] += Math.sqrt(2.0/N) * Math.cos((Math.PI*(2*k+1)*n)/(2*N)) * vectorDCT[n];
-			}
-		}
-		
-		return vector;
-	}
 }
