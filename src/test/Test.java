@@ -191,8 +191,10 @@ public class Test
 		final double[][] randomMatrix = new double[h][];
 		for (int l = 0; l < randomMatrix.length; ++l)
 		{
-			randomMatrix[l] = IntStream.range(0, w).mapToDouble(i->Math.random()).toArray();
+			randomMatrix[l] = IntStream.range(0, w).mapToDouble(i->(double)((int)(Math.random()*500))).toArray();
 		}
+		
+		System.out.println(Arrays.deepToString(randomMatrix));
 		
 		final double[][] reconstructedMatrix = DPCM.decode(DPCM.encode(randomMatrix, 1));
 OUT_LOOP: for (int y = 0; y < h; ++y)
@@ -201,11 +203,14 @@ OUT_LOOP: for (int y = 0; y < h; ++y)
 			{
 				if (reconstructedMatrix[y][x] != randomMatrix[y][x])
 				{
-					System.err.println("Erreur !");
+					System.err.println("Erreur ! à " + "(" + x + ", " + y + ")");
 					break OUT_LOOP;
 				}
 			}
 		}
+		
+		System.out.println("=====================\n" + Arrays.deepToString(reconstructedMatrix));
+		
 	}
 	
 	/**

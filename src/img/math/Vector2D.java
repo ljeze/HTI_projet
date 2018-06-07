@@ -8,13 +8,13 @@ public class Vector2D
 	/**
 	 * Coordonnée x.
 	 */
-	private final int x;
+	private final double x;
 	/**
 	 * Coordonnée y.
 	 */
-	private final int y;
+	private final double y;
 	
-	public Vector2D(final int x, final int y)
+	public Vector2D(final double x, final double y)
 	{
 		this.x = x;
 		this.y = y;
@@ -26,7 +26,7 @@ public class Vector2D
 	 */
 	public int x()
 	{
-		return x;
+		return (int) x;
 	}
 	
 	/**
@@ -34,6 +34,24 @@ public class Vector2D
 	 * @return coordonnée y de ce vecteur.
 	 */
 	public int y()
+	{
+		return (int) y;
+	}
+	
+	/**
+	 * Obtenir la coordonnée x de ce vecteur.
+	 * @return coordonnée x de ce vecteur.
+	 */
+	public double xDouble()
+	{
+		return x;
+	}
+	
+	/**
+	 * Obtenir la coordonnée y de ce vecteur.
+	 * @return coordonnée y de ce vecteur.
+	 */
+	public double yDouble()
 	{
 		return y;
 	}
@@ -62,6 +80,11 @@ public class Vector2D
 		return new Vector2D(x - other.x, y - other.y);
 	}
 	
+	public Vector2D times(final double f)
+	{
+		return new Vector2D(x*f, y*f);
+	}
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -70,11 +93,11 @@ public class Vector2D
 	{
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + x;
-		result = prime * result + y;
+		result = prime * result + (int)x;
+		result = prime * result + (int)y;
 		return result;
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */

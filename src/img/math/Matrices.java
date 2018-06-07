@@ -215,6 +215,21 @@ public class Matrices
 		return entropy;
 	}
 	
+	public static double computeVectorEntropy(final Vector2D[][] matrix)
+	{
+		final Vector2D[][] roundMatrix = new Vector2D[matrix.length][matrix[0].length];
+		
+		for (int y = 0; y < roundMatrix.length; ++y)
+		{
+			for (int x = 0; x < roundMatrix[0].length; ++x)
+			{
+				roundMatrix[y][x] = new Vector2D(Math.round(matrix[y][x].xDouble()), Math.round(matrix[y][x].yDouble()));
+			}
+		}
+		
+		return computeEntropy(roundMatrix);
+	}
+	
 	
 	/**
 	 * Calcule l'entropie d'une matrice représentant une source de symboles.

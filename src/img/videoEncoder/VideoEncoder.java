@@ -1,5 +1,6 @@
 package img.videoEncoder;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
 import img.math.Matrices;
@@ -8,6 +9,7 @@ import img.math.transforms.DCT;
 import img.prediction.DPCM;
 import img.videoEncoder.io.EncodedFrame;
 import img.videoEncoder.io.EncoderParams;
+import test.plot.Plot;
 import img.videoEncoder.io.EncodedFrame.FrameType;
 
 /**
@@ -220,8 +222,8 @@ public class VideoEncoder
 				{
 					for (int x = 0; x < w; x++)
 					{
-						/*transformedErrors[y][x] = ((transformedErrors[y][x]*16.0)/quantifWeights[y%dctBlockSize][x%dctBlockSize]) / 
-												(2.0*quantifScale);*/
+						transformedErrors[y][x] = Math.round(((transformedErrors[y][x]*16.0)/quantifWeights[y%dctBlockSize][x%dctBlockSize]) / 
+												(2.0*quantifScale));
 						//transformedErrors[y][x] = Math.round(transformedErrors[y][x] / 1.5)*1.5;
 					}
 				}
@@ -233,9 +235,9 @@ public class VideoEncoder
 				{
 					for (int x = 0; x < w; ++x)
 					{
-						/*transformedErrors[y][x] = (transformedErrors[y][x]*16.0 / quantifWeights[y%dctBlockSize][x%dctBlockSize] - 
+						transformedErrors[y][x] = Math.round((transformedErrors[y][x]*16.0 / quantifWeights[y%dctBlockSize][x%dctBlockSize] - 
 													Math.signum(transformedErrors[y][x])*quantifScale) / 
-												(2*quantifScale);*/
+												(2*quantifScale));
 					}
 				}
 				break;
@@ -259,13 +261,38 @@ public class VideoEncoder
 	 * @return carte des erreurs de prédiction à partir de la matrice de
 	 *         coefficient DCT par bloc.
 	 */
-	public static int[][] inverseTransformErrors(final double[][] transformedErrors, final int dctBlockSize)
+	public static int[][] inverseTransformErrors(final double[][] transformedErrors, final int dctBlockSize,
+			final int[][] quantifWeights, final double quantifScale, final FrameType frameType)
 	{
 		final int h = transformedErrors.length,
 				  w = transformedErrors[0].length;
 		
 		// On effectue le décodage DPCM.
 		final double[][] dctErrors = DPCM.decode(transformedErrors);
+		
+		// Quantification inverse.
+		switch (frameType)
+		{
+			case I :
+				for (int y = 0; y < h; ++y)
+				{
+					for (int x = 0; x < w; ++x)
+					{
+						dctErrors[y][x] = (dctErrors[y][x] * 2*quantifScale) * quantifWeights[y%dctBlockSize][x%dctBlockSize] / 16;
+					}
+				}
+				break;
+				
+			case P :
+				for (int y = 0; y < h; ++y)
+				{
+					for (int x = 0; x < w; ++x)
+					{
+						dctErrors[y][x] = (dctErrors[y][x] * 2*quantifScale - Math.signum(transformedErrors[y][x])*quantifScale) * quantifWeights[y%dctBlockSize][x%dctBlockSize] / 16;
+					}
+				}
+				break;
+		}
 		
 		final double[][] predErrorDouble = DCT.inverseBlockTransform(dctErrors, dctBlockSize, dctBlockSize);
 		final int[][] predError = new int[h][w];
@@ -274,8 +301,8 @@ public class VideoEncoder
 		{
 			for (int x = 0; x < w; ++x)
 			{
-				predError[y][x] = (int) Math.round(predErrorDouble[y][x]);
-				//predError[y][x] = (int) Math.max(-255, Math.min(Math.round(predErrorDouble[y][x]), 255));
+				//predError[y][x] = (int) Math.round(predErrorDouble[y][x]);
+				predError[y][x] = (int) Math.max(0, Math.min(Math.round(predErrorDouble[y][x]), 255));
 			}
 		}
 		

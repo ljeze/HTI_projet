@@ -15,6 +15,8 @@ import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.sun.media.jfxmedia.track.Track.Encoding;
+
 import gui.observable.Observable;
 import gui.observable.Observables;
 import img.Images;
@@ -164,7 +166,7 @@ public class TestController
 	{
 		final BufferedImage errorsImg = Images
 				.grayToJavaImg(Matrices.map(VideoEncoder.inverseTransformErrors(encodedFrame.getTransformedErrors(),
-						encoderParams.getDctBlockSize()), -255, 255, 0, 255)
+						encoderParams.getDctBlockSize(), encoderParams.getQuantificationWeights(), encoderParams.getQuantificationScale(), encodedFrame.getType()), -255, 255, 0, 255)
 		);
 		
 		codingResults.errorsImg.set(errorsImg);
@@ -177,7 +179,7 @@ public class TestController
 			codingResults.movementMap.set(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()));
 			
 			resultStack.peek().movementMap.set(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()));
-			resultStack.peek().movementMapEntropy.set(Matrices.computeEntropy(encodedFrame.getTransformedBlockMovementMap()));
+			resultStack.peek().movementMapEntropy.set(Matrices.computeVectorEntropy(encodedFrame.getTransformedBlockMovementMap()));
 		}
 	}
 	

@@ -46,13 +46,13 @@ public class VideoDecodingPipeline implements Function<EncodedFrame, int[][]>
 		// Trame Intra.
 		if (frame.getType() == FrameType.I)
 		{
-			errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
+			errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.I);
 			prevFrameRec = reconstructI(errors);
 			return prevFrameRec;
 		}
 		
 		// On récupère les erreurs de prédiction.
-		errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize());
+		errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P);
 		// La carte de compensation de mouvement.
 		final Vector2D[][] blockMovementMap = inverseTransformBlockMovementMap(frame.getTransformedBlockMovementMap());
 		
