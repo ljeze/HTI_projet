@@ -183,11 +183,14 @@ public class VectorMapView extends JComponent
 	 */
 	private static void drawVector(final Graphics g,  int x,  int y,  int dx,  int dy)
 	{
-		int oldX = x,
+		/*int oldX = x,
 			oldY = y;
+		*/
+		x += dx;
+		y += dy;
 		
-		
-		
+		dx *= -1;
+		dy *= -1;
 		
 		final double arrowAngle  = Math.PI/8,
 					 arrowLength = 4;
