@@ -22,18 +22,28 @@ public class DPCM
 		final int h = matrix.length,
 				  w = matrix[0].length;
 		
+		final double[][] reconstructedMatrix = new double[h][w];
 		final double[][] error = new double[h][w];
 		
-		double lastPred;
+		for (int x = 0; x < w; ++x)
+		{
+			reconstructedMatrix[0][x] = matrix[0][x];
+			error[0][x] = matrix[0][x];
+		}
 		
-	    for (int l = 0; l < h; ++l)
+		for (int y = 0; y < h; ++y)
+		{
+			reconstructedMatrix[y][0] = matrix[y][0];
+			error[y][0] = matrix[y][0];
+		}
+		
+	    for (int l = 1; l < h; ++l)
 	    {
-	    	lastPred = 0;
-	    	
-	        for (int c = 0; c < w; ++c)
+	        for (int c = 1; c < w; ++c)
 	        {
-	        	error[l][c] = /*quantize(*/matrix[l][c] - lastPred/*, step)*/;
-	        	lastPred = error[l][c] + lastPred;
+	        	final double predictedElement = reconstructedMatrix[l-1][c] * 0.5 + reconstructedMatrix[l][c-1] * 0.5;
+	        	error[l][c] = quantize(matrix[l][c] - predictedElement, step);
+	        	reconstructedMatrix[l][c] = predictedElement + error[l][c];
 	        }
 	    }
 	    
@@ -52,20 +62,28 @@ public class DPCM
 		final int h = error.length,
 				  w = error[0].length;
 		
-		final double[][] matrix = new double[h][w];
+		final double[][] reconstructedMatrix = new double[h][w];
 		
-		double lastRec;
-	    for (int l = 0; l < h; ++l)
+		for (int x = 0; x < w; ++x)
+		{
+			reconstructedMatrix[0][x] = error[0][x];
+		}
+		
+		for (int y = 0; y < h; ++y)
+		{
+			reconstructedMatrix[y][0] = error[y][0];
+		}
+		
+	    for (int l = 1; l < h; ++l)
 	    {
-	    	lastRec = 0;
-	        for (int c = 0; c < w; ++c)
+	        for (int c = 1; c < w; ++c)
 	        {
-	        	matrix[l][c] = error[l][c] + lastRec;
-	            lastRec = matrix[l][c];
+	        	final double predictedElement = reconstructedMatrix[l-1][c] * 0.5 + reconstructedMatrix[l][c-1] * 0.5;
+	        	reconstructedMatrix[l][c] = predictedElement + error[l][c];
 	        }
 	    }
 	    
-	    return matrix;
+	    return reconstructedMatrix;
 	}
 	
 	/**
@@ -98,18 +116,28 @@ public class DPCM
 		final int h = matrix.length,
 				  w = matrix[0].length;
 		
+		final Vector2D[][] reconstructedMatrix = new Vector2D[h][w];
 		final Vector2D[][] error = new Vector2D[h][w];
 		
-		Vector2D lastPred;
+		for (int x = 0; x < w; ++x)
+		{
+			reconstructedMatrix[0][x] = matrix[0][x];
+			error[0][x] = matrix[0][x];
+		}
 		
-	    for (int l = 0; l < h; ++l)
+		for (int y = 0; y < h; ++y)
+		{
+			reconstructedMatrix[y][0] = matrix[y][0];
+			error[y][0] = matrix[y][0];
+		}
+		
+	    for (int l = 1; l < h; ++l)
 	    {
-	    	lastPred = new Vector2D(0, 0);
-	    	
-	        for (int c = 0; c < w; ++c)
+	        for (int c = 1; c < w; ++c)
 	        {
-	        	error[l][c] = quantize(matrix[l][c].minus(lastPred), step);
-	        	lastPred = error[l][c].plus(lastPred);
+	        	final Vector2D predictedElement = reconstructedMatrix[l-1][c].times(0.5).plus(reconstructedMatrix[l][c-1].times(0.5));
+	        	error[l][c] = quantize(matrix[l][c].minus(predictedElement), step);
+	        	reconstructedMatrix[l][c] = predictedElement.plus(error[l][c]);
 	        }
 	    }
 	    
@@ -128,20 +156,28 @@ public class DPCM
 		final int h = error.length,
 				  w = error[0].length;
 		
-		final Vector2D[][] matrix = new Vector2D[h][w];
+		final Vector2D[][] reconstructedMatrix = new Vector2D[h][w];
 		
-		Vector2D lastRec;
-	    for (int l = 0; l < h; ++l)
+		for (int x = 0; x < w; ++x)
+		{
+			reconstructedMatrix[0][x] = error[0][x];
+		}
+		
+		for (int y = 0; y < h; ++y)
+		{
+			reconstructedMatrix[y][0] = error[y][0];
+		}
+		
+	    for (int l = 1; l < h; ++l)
 	    {
-	    	lastRec = new Vector2D(0, 0);
-	        for (int c = 0; c < w; ++c)
+	        for (int c = 1; c < w; ++c)
 	        {
-	        	matrix[l][c] = error[l][c].plus(lastRec);
-	            lastRec = matrix[l][c];
+	        	final Vector2D predictedElement = reconstructedMatrix[l-1][c].times(0.5).plus(reconstructedMatrix[l][c-1].times(0.5));
+	        	reconstructedMatrix[l][c] = predictedElement.plus(error[l][c]);
 	        }
 	    }
 	    
-	    return matrix;
+	    return reconstructedMatrix;
 	}
 	
 	/**

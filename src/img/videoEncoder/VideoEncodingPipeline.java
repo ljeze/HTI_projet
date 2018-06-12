@@ -13,9 +13,8 @@ import java.util.function.Function;
 
 import img.math.Vector2D;
 import img.videoEncoder.io.EncodedFrame;
-import img.videoEncoder.io.EncoderParams;
-import test.plot.Plot;
 import img.videoEncoder.io.EncodedFrame.FrameType;
+import img.videoEncoder.io.EncoderParams;
 
 /**
  * Pipeline d'encodage vidéo.
@@ -70,7 +69,7 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 					parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.I);
 			
 			// On reconstruit la trame.
-			frameRec = reconstructI(inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()));
+			frameRec = reconstructI(inverseTransformErrors(transformedErrors, parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.I));
 			
 			prevFrameRec = frameRec;
 			
@@ -93,8 +92,8 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 				parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P);
 		
 		// On calcul la trame actuelle reconstruite.
-		frameRec = reconstructP(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize()), 
-											 inverseTransformBlockMovementMap(transformedBlockMovementMap), 
+		frameRec = reconstructP(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P), 
+											 inverseTransformBlockMovementMap(transformedBlockMovementMap),
 									   parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;
