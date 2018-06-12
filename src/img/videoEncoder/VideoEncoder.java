@@ -1,6 +1,5 @@
 package img.videoEncoder;
 
-import java.util.Arrays;
 import java.util.stream.Stream;
 
 import img.math.Matrices;
@@ -8,9 +7,8 @@ import img.math.Vector2D;
 import img.math.transforms.DCT;
 import img.prediction.DPCM;
 import img.videoEncoder.io.EncodedFrame;
-import img.videoEncoder.io.EncoderParams;
-import test.plot.Plot;
 import img.videoEncoder.io.EncodedFrame.FrameType;
+import img.videoEncoder.io.EncoderParams;
 
 /**
  * Possède toutes les fonctions d'encodage / décodage utilisées dans le pipeline
@@ -108,11 +106,24 @@ public class VideoEncoder
 		Vector2D minMovement = new Vector2D(0, 0);
 		
 		// Déplacements maximums autorisés pour ne pas sortir de l'image.
-		final int minI = Math.max(-16, (bx+blockW) - w),
-				  maxI = Math.min(16, bx),
+		final int minI = Math.max(-2*blockW, (bx+blockW) - w),
+				  maxI = Math.min(2*blockW, bx),
 				  
-				  minJ = Math.max(-16, (by+blockH) - h),
-				  maxJ = Math.min(16, by);
+				  minJ = Math.max(-2*blockH, (by+blockH) - h),
+				  maxJ = Math.min(2*blockH, by);
+		
+		int disimilarity = 0;
+		for (int y = by; y < by + blockH; ++y)
+		{
+			for (int x = bx; x < bx + blockW; ++x)
+			{
+				disimilarity += Math.abs(frame1[y][x] - frame2[y][x]);
+			}
+		}
+		if (disimilarity == 0)
+		{
+			return new Vector2D(0, 0);
+		}
 		
 		// Essayer pour différents déplacement possibles en x...
 		for (int i = minI; i <= maxI; ++i)
@@ -121,7 +132,7 @@ public class VideoEncoder
 			for (int j = minJ; j <= maxJ; ++j)
 			{
 				// Calculer la disimilarité.
-				int disimilarity = 0;
+				disimilarity = 0;
 				
 				for (int y = by; y < by + blockH; ++y)
 				{
@@ -151,10 +162,10 @@ public class VideoEncoder
 	
 	/**
 	 * Obtenir la carte de compensation de mouvement des blocks entre la trame
-	 * précédente reconstruite et la trame actuelle.
+	 * précédente et la trame actuelle.
 	 * 
-	 * @param prevFrameRec
-	 *            trame précédente reconstruite.
+	 * @param prevFrame
+	 *            trame précédente.
 	 * @param frame
 	 *            trame actuelle.
 	 * @param blockW
@@ -164,7 +175,7 @@ public class VideoEncoder
 	 * @return carte de compensation de mouvement des blocks entre la trame
 	 *         précédente reconstruite et la trame actuelle.
 	 */
-	/*package*/ static Vector2D[][] computeBlockMovementMap(final int[][] prevFrameRec, final int[][] frame, final int blockW,
+	/*package*/ static Vector2D[][] computeBlockMovementMap(final int[][] prevFrame, final int[][] frame, final int blockW,
 			final int blockH)
 	{
 		final int nBlockH = frame.length    / blockH,
@@ -177,7 +188,7 @@ public class VideoEncoder
 		{
 			for (int bx = 0; bx < nBlockW; ++bx) 	// Indice position x.
 			{
-				movementMap[by][bx] = computeBlockMovement(frame, prevFrameRec, bx*blockW, by*blockH, blockW, blockH);
+				movementMap[by][bx] = computeBlockMovement(frame, prevFrame, bx*blockW, by*blockH, blockW, blockH);
 			}
 		}
 		

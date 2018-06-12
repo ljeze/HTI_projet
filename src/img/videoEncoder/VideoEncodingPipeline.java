@@ -29,6 +29,10 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 	 * Trame précédente reconstruite.
 	 */
 	private int[][] prevFrameRec;
+	/**
+	 * Trame précédente.
+	 */
+	private int[][] prevFrame;
 	
 	public VideoEncodingPipeline(final EncoderParams parameters)
 	{
@@ -72,6 +76,7 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 			frameRec = reconstructI(inverseTransformErrors(transformedErrors, parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.I));
 			
 			prevFrameRec = frameRec;
+			prevFrame    = frame;
 			
 			// L'envoyer sans prédiction.
 			return EncodedFrame.intraFrame(transformedErrors);
@@ -80,7 +85,7 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 		final Vector2D[][] transformedBlockMovementMap;
 		
 		// On calcul la carte de compensation de mouvement des blocs.
-		final Vector2D[][] blockMovementMap = computeBlockMovementMap(prevFrameRec, frame, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
+		final Vector2D[][] blockMovementMap = computeBlockMovementMap(prevFrame, frame, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		// On calcul les erreurs de prédiction entre la trame actuelle initiale et la trame précédente reconstruite.
 		errors = computeErrors(prevFrameRec, frame, blockMovementMap, parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
@@ -97,6 +102,7 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 									   parameters.getMovementBlockSize(), parameters.getMovementBlockSize());
 		
 		prevFrameRec = frameRec;
+		prevFrame    = frame;
 		return EncodedFrame.predictedFrame(transformedErrors, transformedBlockMovementMap);
 	}
 }

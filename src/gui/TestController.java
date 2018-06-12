@@ -15,8 +15,6 @@ import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import com.sun.media.jfxmedia.track.Track.Encoding;
-
 import gui.observable.Observable;
 import gui.observable.Observables;
 import img.Images;
