@@ -351,7 +351,7 @@ public class VideoEncoder
 				final Vector2D blockMovement = blockMovementMap[y/blockH][x/blockW];
 				frameErrors[y][x] = frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()];
 				
-				//frameErrors[y][x] = Math.max(-255, Math.min(frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()], 255));
+//				frameErrors[y][x] = Math.max(-255, Math.min(frame[y][x] - prevFrameRec[y - blockMovement.y()][x - blockMovement.x()], 255));
 			}
 		}
 		return frameErrors;
