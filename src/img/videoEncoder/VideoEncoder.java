@@ -80,9 +80,9 @@ public class VideoEncoder
 	 * minimum.
 	 * 
 	 * @param frame1
-	 *            trame 1, référence.
+	 *            trame 1 = x(t).
 	 * @param frame2
-	 *            trame 2, où l'on cherche le vecteur de translation.
+	 *            trame 2 = x(t-1).
 	 * @param bx
 	 *            position x réel du coin supérieur gauche du bloc dans la trame 1.
 	 * @param by
@@ -106,6 +106,7 @@ public class VideoEncoder
 		Vector2D minMovement = new Vector2D(0, 0);
 		
 		// Déplacements maximums autorisés pour ne pas sortir de l'image.
+		
 		final int minI = Math.max(-2*blockW, (bx+blockW) - w),
 				  maxI = Math.min(2*blockW, bx),
 				  
@@ -120,6 +121,7 @@ public class VideoEncoder
 				disimilarity += Math.abs(frame1[y][x] - frame2[y][x]);
 			}
 		}
+		
 		if (disimilarity == 0)
 		{
 			return new Vector2D(0, 0);
@@ -184,11 +186,12 @@ public class VideoEncoder
 		final Vector2D[][] movementMap = new Vector2D[nBlockH][nBlockW];
 		
 		// Pour chaque bloc...
-		for (int by = 0; by < nBlockH; ++by) 		// Indice position y.
+		for (int by = 0; by < nBlockH; ++by) 		// Indice bloc position y.
 		{
-			for (int bx = 0; bx < nBlockW; ++bx) 	// Indice position x.
+			for (int bx = 0; bx < nBlockW; ++bx) 	// Indice bloc position x.
 			{
 				movementMap[by][bx] = computeBlockMovement(frame, prevFrame, bx*blockW, by*blockH, blockW, blockH);
+				//movementMap[by][bx] = new Vector2D(0, 0);
 			}
 		}
 		
@@ -313,7 +316,7 @@ public class VideoEncoder
 			for (int x = 0; x < w; ++x)
 			{
 				//predError[y][x] = (int) Math.round(predErrorDouble[y][x]);
-				predError[y][x] = (int) Math.max(0, Math.min(Math.round(predErrorDouble[y][x]), 255));
+				predError[y][x] = (int) Math.max(-255, Math.min(Math.round(predErrorDouble[y][x]), 255));
 			}
 		}
 		

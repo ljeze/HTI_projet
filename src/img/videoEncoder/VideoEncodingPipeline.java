@@ -9,12 +9,16 @@ import static img.videoEncoder.VideoEncoder.reconstructP;
 import static img.videoEncoder.VideoEncoder.transformBlockMovementMap;
 import static img.videoEncoder.VideoEncoder.transformErrors;
 
+import java.util.Arrays;
 import java.util.function.Function;
 
+import img.Images;
+import img.math.Matrices;
 import img.math.Vector2D;
 import img.videoEncoder.io.EncodedFrame;
 import img.videoEncoder.io.EncodedFrame.FrameType;
 import img.videoEncoder.io.EncoderParams;
+import test.plot.Plot;
 
 /**
  * Pipeline d'encodage vidéo.
@@ -96,6 +100,7 @@ public class VideoEncodingPipeline implements Function<int[][], EncodedFrame>
 		transformedErrors = transformErrors(errors, parameters.getDctBlockSize(),
 				parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P);
 		
+		//Plot.showImg(Images.grayToJavaImg(Matrices.map(inverseTransformErrors(transformedErrors, parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P), -255, 255, 0, 255)));
 		// On calcul la trame actuelle reconstruite.
 		frameRec = reconstructP(prevFrameRec, inverseTransformErrors(transformedErrors, parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.P), 
 											 inverseTransformBlockMovementMap(transformedBlockMovementMap),

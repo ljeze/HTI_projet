@@ -2,12 +2,15 @@ package img.videoEncoder;
 
 import static img.videoEncoder.VideoEncoder.*;
 
+import java.util.Arrays;
 import java.util.function.Function;
 
+import img.Images;
 import img.math.Vector2D;
 import img.videoEncoder.io.EncodedFrame;
 import img.videoEncoder.io.EncoderParams;
 import img.videoEncoder.io.EncodedFrame.FrameType;
+import test.plot.Plot;
 
 /**
  * Pipeline de décodage vidéo.
@@ -48,6 +51,7 @@ public class VideoDecodingPipeline implements Function<EncodedFrame, int[][]>
 		{
 			errors = inverseTransformErrors(frame.getTransformedErrors(), parameters.getDctBlockSize(), parameters.getQuantificationWeights(), parameters.getQuantificationScale(), FrameType.I);
 			prevFrameRec = reconstructI(errors);
+			
 			return prevFrameRec;
 		}
 		

@@ -28,6 +28,7 @@ import javax.swing.event.ChangeListener;
 
 import gui.custom.VectorMapView;
 import gui.observable.Observables;
+import img.math.Vector2D;
 
 /**
  * Frame principal pour l'interface de test.
@@ -87,7 +88,7 @@ public class TestFrame extends JFrame
 	 */
 	private void buildFrame()
 	{
-		final JSplitPane centerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, buildViewPanel(), buildParameterPanel());
+		final JSplitPane centerPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, buildViewPanel(), buildRightPanel());
 		
 		centerPane.setResizeWeight(1);
 		Observables.notNull(controller.getSequencePathPrefix()).addListener(b->centerPane.resetToPreferredSizes());
@@ -126,8 +127,19 @@ public class TestFrame extends JFrame
 	 * Construit le panneau des paramètres de l'encodage.
 	 * @return panneau des paramètres de l'encodage.
 	 */
-	private JPanel buildParameterPanel()
+	private JPanel buildRightPanel()
 	{
+		final JPanel rightPanel = new JPanel();
+		final JPanel resultPanel = new JPanel(new GridBagLayout())
+		{
+			private static final long serialVersionUID = 1L;
+			
+			@Override
+			public Dimension getMaximumSize()
+			{
+				return new Dimension(super.getMaximumSize().width, super.getPreferredSize().height);
+			}
+		 };
 		final JPanel parameterPanel = new JPanel();
 		final JPanel formPanel = new JPanel(new GridBagLayout())
 		{
@@ -144,18 +156,42 @@ public class TestFrame extends JFrame
 						 movementSizeField = new JTextField(3),
 						 quantifScaleField = new JTextField(3);
 		
-		parameterPanel.setLayout(new BoxLayout(parameterPanel, BoxLayout.Y_AXIS));
-		parameterPanel.setVisible(false);
-		parameterPanel.setMinimumSize(new Dimension(0, 0));
+		rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+		rightPanel.setVisible(false);
+		rightPanel.setMinimumSize(new Dimension(0, 0));
 		
-		Observables.notNull(controller.getSequencePathPrefix()).addListener(parameterPanel::setVisible);
+		parameterPanel.setLayout(new BoxLayout(parameterPanel, BoxLayout.Y_AXIS));
+		
+		Observables.notNull(controller.getSequencePathPrefix()).addListener(rightPanel::setVisible);
 		// Marges du panneau.
 		parameterPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20),
 																	BorderFactory.createTitledBorder("Paramètres de l'encodage")));
 		
+		resultPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20),
+				BorderFactory.createTitledBorder("Sorties")));
+		
+		
 		Observables.bind(movementSizeField, controller.movementBlockSizeProperty(), Integer::parseInt);
 		Observables.bind(dctSizeField, controller.dctBlockSizeProperty(), Integer::parseInt);
 		Observables.bind(quantifScaleField, controller.quantifScaleProperty(), Integer::parseInt);
+		
+		final JLabel outStreamLbl = new JLabel();
+		
+		Observables.bind(movementSizeField, controller.movementBlockSizeProperty(), Integer::parseInt);
+		
+		final JComponent[][] resultComponents = {
+			{new JLabel("Flux binaire"), outStreamLbl}	
+		};
+		
+		controller.getCodingResults().errorsEntropy.addListener(entropy->
+		{
+			final BufferedImage errorImg = controller.getCodingResults().errorsImg.get();
+			final Vector2D[][] vectorMap = controller.getCodingResults().movementMap.get();
+			
+			outStreamLbl.setText(entropy*errorImg.getWidth()*errorImg.getHeight()/1000 + " Kbits");
+		});
+		
+		populateForm(resultPanel, new Insets(5, 5, 5, 5), resultComponents);
 		
 		final JComponent[][] formComponents = {
 			{new JLabel("Taille des blocs prédiction de mouvement"), movementSizeField},
@@ -165,7 +201,11 @@ public class TestFrame extends JFrame
 		
 		populateForm(formPanel, new Insets(5, 5, 5, 5), formComponents);
 		parameterPanel.add(formPanel);
-		return parameterPanel;
+		
+		rightPanel.add(parameterPanel);
+		rightPanel.add(resultPanel);
+		
+		return rightPanel;
 	}
 	
 	/**

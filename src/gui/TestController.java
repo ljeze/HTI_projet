@@ -149,7 +149,7 @@ public class TestController
 		
 		codingResults.originalImg.set(originalImg);
 		newResults.originalImg.set(originalImg);
-		newResults.originalEntropy.set(Matrices.computeEntropy(frame, 0, 255));
+		newResults.originalEntropy.set(Matrices.computeEntropy(frame));
 		
 		resultStack.push(newResults);
 	}
@@ -177,7 +177,7 @@ public class TestController
 			codingResults.movementMap.set(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()));
 			
 			resultStack.peek().movementMap.set(VideoEncoder.inverseTransformBlockMovementMap(encodedFrame.getTransformedBlockMovementMap()));
-			resultStack.peek().movementMapEntropy.set(Matrices.computeVectorEntropy(encodedFrame.getTransformedBlockMovementMap()));
+			resultStack.peek().movementMapEntropy.set(Matrices.computeEntropy(encodedFrame.getTransformedBlockMovementMap()));
 		}
 	}
 	

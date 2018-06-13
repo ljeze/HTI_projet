@@ -1,8 +1,5 @@
 package img.math;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Classe utilitaire pour les matrices.
  */
@@ -132,105 +129,137 @@ public class Matrices
 		return intMatrix;
 	}
 	
-	/**
-	 * Log(2) constant.
-	 */
-	private final static double LOG2 = Math.log(2);
+	public static int max(final int[][] matrix)
+	{
+		final int h = matrix.length,
+				  w = matrix[0].length;
+		
+		int max = -Integer.MAX_VALUE;
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				if (matrix[y][x] > max)
+				{
+					max = matrix[y][x];
+				}
+			}
+		}
+		
+		return max;
+	}
 	
-	/**
-	 * Calcule l'entropie d'une matrice représentant une source de symboles
-	 * doubles.
-	 * 
-	 * @param matrix
-	 *            matrice, source de symboles doubles.
-	 * @return entropie de cette matrice.
-	 */
+	public static int min(final int[][] matrix)
+	{
+		final int h = matrix.length,
+				  w = matrix[0].length;
+		
+		int min = Integer.MAX_VALUE;
+		for (int y = 0; y < h; ++y)
+		{
+			for (int x = 0; x < w; ++x)
+			{
+				if (matrix[y][x] < min)
+				{
+					min = matrix[y][x];
+				}
+			}
+		}
+		
+		return min;
+	}
+	
+	private static class EntropyResult
+	{
+		public double[] h;
+		public int nr;
+	}
+	
+	public static double computeEntropy(final int[][] matrix)
+	{
+		final EntropyResult res = calcProb(matrix, matrix.length, matrix[0].length);
+		return entropie(res);
+	}
+	
+
 	public static double computeEntropy(final double[][] matrix)
 	{
 		final int h = matrix.length,
 				  w = matrix[0].length;
 		
-		final Map<Double, Integer> histogram = new HashMap<>();
-		
-		// Compter chaque occurence de double présent dans la matrice.
+		final int[][] matrixInt = new int[h][w];
 		for (int y = 0; y < h; ++y)
 		{
 			for (int x = 0; x < w; ++x)
 			{
-				Integer counter = histogram.get(matrix[y][x]);
-				histogram.put(matrix[y][x], counter == null ? 1 : (counter+1));
+				matrixInt[y][x] = (int)(Math.round(matrix[y][x]));
 			}
 		}
 		
-		double entropy = 0;
-		for (int symbolCounter : histogram.values())
-		{
-			// Probabilité d'apparition de ce symbole.
-			final double symbolP = (double) symbolCounter / (w*h);
-			entropy += symbolP * (Math.log(symbolP)/LOG2);
-		}
-		
-		return -entropy;
+		return computeEntropy(matrixInt);
 	}
 	
-	/**
-	 * Calcule l'entropie d'une matrice représentant une source de symboles
-	 * entiers.
-	 * 
-	 * @param matrix
-	 *            matrice, source de symboles entiers.
-	 * @param min
-	 *            valeur minimale de cette matrice.
-	 * @param max
-	 *            valeur maximale inclue de cette matrice.
-	 * @return entropie de cette matrice.
-	 */
-	public static double computeEntropy(final int[][] matrix, final int min, final int max)
+	public static double computeEntropy(final Vector2D[][] matrix)
 	{
 		final int h = matrix.length,
 				  w = matrix[0].length;
 		
-		final int[] histogram = new int[max - min + 1];
-		
-		// Compter chaque occurence de double présent dans la matrice.
+		final int[][] matrixInt = new int[h][w];
 		for (int y = 0; y < h; ++y)
 		{
 			for (int x = 0; x < w; ++x)
 			{
-				++histogram[matrix[y][x]];
+				matrixInt[y][x] = (int)(Math.round(matrix[y][x].xDouble()));
 			}
 		}
 		
-		double entropy = 0;
-		for (int i = min; i <= max; ++i)
-		{
-			// Probabilité d'apparition de ce symbole.
-			if (histogram[i] > 0)
-			{
-				final double symbolP = (double) histogram[i] / (w*h);
-				entropy -= symbolP * (Math.log(symbolP)/LOG2);
-			}
-		}
-		
-		return entropy;
+		return computeEntropy(matrixInt);
 	}
 	
-	public static double computeVectorEntropy(final Vector2D[][] matrix)
+	private static double entropie(final EntropyResult res)
 	{
-		final Vector2D[][] roundMatrix = new Vector2D[matrix.length][matrix[0].length];
+		double Hx = 0.0;
 		
-		for (int y = 0; y < roundMatrix.length; ++y)
+		for(int i = 0; i < res.nr; i++)
 		{
-			for (int x = 0; x < roundMatrix[0].length; ++x)
+			if(res.h[i] != 0.0)
 			{
-				roundMatrix[y][x] = new Vector2D(Math.round(matrix[y][x].xDouble()), Math.round(matrix[y][x].yDouble()));
+				Hx -= res.h[i] * Math.log(res.h[i]);
 			}
 		}
+		Hx = Hx/(Math.log(2));
 		
-		return computeEntropy(roundMatrix);
+		return Hx;
 	}
 	
-	
+	private static EntropyResult calcProb(final int[][] matrix, final int M, final int N)
+	{
+		final EntropyResult res = new EntropyResult();
+		
+		final int mi,Mi;
+		
+		mi = Matrices.min(matrix); 
+		Mi = Matrices.max(matrix);
+		
+		final double[] h = new double[Mi-mi+1];
+		
+		for(int i=0; i < M; i++)
+		{
+		   for (int j = 0; j < N; j++)
+		   {
+		      h[matrix[i][j]-mi]=h[matrix[i][j]-mi] + 1.0;
+		   }
+		   res.nr = Mi-mi+1;
+		}
+		for(int i = 0; i<res.nr; i++)
+	  	{ 
+			h[i]=(double)h[i]/((double)M*(double)N);
+		}
+		
+		res.h = h;
+		return res;
+	}
+
 	/**
 	 * Calcule l'entropie d'une matrice représentant une source de symboles.
 	 * 
@@ -238,7 +267,7 @@ public class Matrices
 	 *            matrice, source de symboles.
 	 * @return entropie de cette matrice.
 	 */
-	public static <T> double computeEntropy(final T[][] matrix)
+	/*public static double computeEntropy(final Vector2D[][] matrix)
 	{
 		final int h = matrix.length,
 				  w = matrix[0].length;
@@ -265,7 +294,7 @@ public class Matrices
 		
 		return entropy;
 	}
-	
+	*/
 	/**
 	 * Mapper les valeurs d'une matrice entre matrixMin et matrixMax vers des
 	 * valeurs entre targetMin et targetMax.
